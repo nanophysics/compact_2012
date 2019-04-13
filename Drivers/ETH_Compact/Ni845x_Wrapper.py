@@ -17,6 +17,14 @@ NiHandle = c_uint32
 class Error(Exception):
     pass
 
+INPUT=0
+OUTPUT=1
+LINE_LDAC=2
+LINE_SYNC=0
+CHIPSELECT_AD5791=0
+CHIPSELECT_GEO_NCP3201=1
+PORT=0
+
 # open dll
 try:
     # if failure, try to open in driver folder
@@ -245,7 +253,7 @@ class NI845x():
 #   uInt8    LineNumber,
 #   int32    ConfigurationValue
 #   );
-    def ni845xSpiScriptDioConfigureLine(self, port=0, line=0, configValue=0):
+    def ni845xSpiScriptDioConfigureLine(self, port=0, line=0, configValue=INPUT):
         callFunc('ni845xSpiScriptDioConfigureLine', self.script, 
                  uInt8(port), uInt8(line), int32(configValue))
 
@@ -326,23 +334,14 @@ class NI845x():
         return lOut
 
 
-
 class ETH_Compact(NI845x):
     """Represents the ETH compact voltage source, using the NI USB 845x"""
 
     def __init__(self, resource_name):
         """The init case defines a session ID, used to identify the instrument"""
-        # init variables
-        self.chip = 0
-        self.chipGeo = 1
-        self.port = 0
-
         # get file name for saving data
         sPath = os.path.dirname(os.path.abspath(__file__))
         self.sFile = os.path.join(sPath, ('Values-%s.txt' % str(resource_name)))
-
-        # try to load old values
-        self.lValue = self.loadValuesFromDisk()
 
         # start with opening NI845x
         NI845x.__init__(self, resource_name)
@@ -374,47 +373,138 @@ class ETH_Compact(NI845x):
     def setLED(self, value=True, iLED=5):
         """Set LED"""
         self.ni845xSpiScriptOpen()
-        self.ni845xSpiScriptDioWriteLine(self.port, line=iLED, data=int(value))
+        self.ni845xSpiScriptDioWriteLine(PORT, line=iLED, data=int(value))
         self.ni845xSpiScriptRun()
         self.ni845xSpiScriptClose()
 
     """ 
-    This initialization function has been modified by Palm Marius on 18.08.2016
-    Now, this function allows to distinct between two initialization modes:
-        fullInitialize = True:  required after power up of compact
-                                sets all values to 0
-        fullInitialize = False: sufficient if compact is still on power 
-                                but usb connection was powered off/disconnected
-
-    Comment: the default value for fullInitialize is True for compatibility 
-    reasons with the old code
+    This initializes the SPI-Card.
+    No values are set to the DAC.
     """
-    def initialize(self,fullInitialize = True):
+    def initialize(self):
         """Set value to channel"""
         # configure device
         self.ni845xSetIoVoltageLevel(self.kNi845x33Volts)
-        self.ni845xDioSetPortLineDirectionMap(port=self.port, lOutput=[1,0,0,0,0,1,1,1])
+        lOutput=[
+            OUTPUT,   # Pin SYNC auf der Leiterplatte compact_2012_da fuer den DA Wandler AD5791
+            OUTPUT,   # reserve, soll nicht floaten
+            INPUT,    # ab mod2019 geschaltet
+                           # auf LDAC von DA Wandler AD5791, bei Puls auf 0V werde die Werte 
+                           # auf den DA Ausgang uebernommen. Hat pullup auf Leiterplatte, normal als 
+                           # Eingang schalten damit sicher keine Uebernahme aus Versehen.
+            OUTPUT,   # reserve, soll nicht floaten,
+            OUTPUT,   # Temperaturregler Leiterplatte compact_2012_vib_heiz, 
+                           # soll nicht floaten
+            OUTPUT,   # LED rot "Erschuetterung"
+            OUTPUT,   # LED gruen "AD"
+            OUTPUT,   # LED blau "DA"
+        ]
+        assert len(lOutput) == 8
+        self.ni845xDioSetPortLineDirectionMap(port=PORT, lOutput=lOutput)
         # create script
         self.ni845xSpiScriptOpen(first=True)
         self.ni845xSpiScriptEnableSPI()
         #
-        self.ni845xSpiScriptCSHigh(self.chip)
-        # configure line 0 as output (=1)
-        self.ni845xSpiScriptDioConfigureLine(self.port, line=0, configValue=1)
+        self.ni845xSpiScriptCSHigh(CHIPSELECT_AD5791)
         # write logical 0 to line 0 (sync/init)
-        self.ni845xSpiScriptDioWriteLine(self.port, line=0, data=0)
+        self.ni845xSpiScriptDioWriteLine(PORT, line=LINE_SYNC, data=0)
+        # set clock polarity (low in idle, phase centered on second edge)
+        self.ni845xSpiScriptClockPolarityPhase(polarity=self.kNi845xSpiClockPolarityIdleLow,
+                                               phase=self.kNi845xSpiClockPhaseSecondEdge)
+        # set clock rate (in kHz)
+        self.ni845xSpiScriptClockRate(1000)
+        self.ni845xSpiScriptDelay(1)
+        
+        # run and close script
+        self.ni845xSpiScriptRun()
+        self.ni845xSpiScriptClose()
+
+        # load old values from file
+        self.lValue = self.loadValuesFromDisk()
+        self.sendValues()
+
+    def setValue(self, index=0, value=0.0, send_to_instr=True):
+        """Set value to DAQ"""
+        self.lValue[index] = value
+        if send_to_instr:
+            self.sendValues()
+
+
+    def getValue(self, index=0):
+        """Get value from memory"""
+        return self.lValue[index]
+
+
+    def sendValues(self):
+        """Script for sending values to DAC"""
+        # create script
+        self.ni845xSpiScriptOpen() 
+        self.ni845xSpiScriptCSLow(CHIPSELECT_AD5791)
+
+        self.ni845xSpiScriptDioWriteLine(PORT, line=LINE_SYNC, data=0)
+        self.initializeControlRegisterDAC()
+        self.ni845xSpiScriptDioWriteLine(PORT, line=LINE_SYNC, data=1)
+
+        self.ni845xSpiScriptUsDelay(delay=1)
+
+        self.ni845xSpiScriptDioWriteLine(PORT, line=LINE_SYNC, data=0)
+        self.copyValuesToDAC()
+        self.ni845xSpiScriptDioWriteLine(PORT, line=LINE_SYNC, data=1)
+
+        # LDAC negative pulse to put values into the DAC register
+        # configure line 2 as output (=1)
+        self.ni845xSpiScriptDioConfigureLine(PORT, line=LINE_LDAC, configValue=OUTPUT)
+        self.ni845xSpiScriptUsDelay(delay=1)
+        self.ni845xSpiScriptDioWriteLine(PORT, line=LINE_LDAC, data=0)
+        self.ni845xSpiScriptUsDelay(delay=1)
+        self.ni845xSpiScriptDioWriteLine(PORT, line=LINE_LDAC, data=1)
+        self.ni845xSpiScriptDioConfigureLine(PORT, line=LINE_LDAC, configValue=INPUT)
+
+        self.ni845xSpiScriptCSHigh(CHIPSELECT_AD5791)
+        self.ni845xSpiScriptRun()
+        self.ni845xSpiScriptClose()
+
+        self.saveValueToDisk()
+
+    def readGeophoneVoltage(self):
+        """Read geophone voltage"""
+        # create script
+        self.ni845xSpiScriptOpen()
+        # self.ni845xSpiScriptEnableSPI()
+        #
+        self.ni845xSpiScriptCSHigh(CHIPSELECT_GEO_NCP3201)
         # set clock polarity (low in idle, phase centered on second edge)
         self.ni845xSpiScriptClockPolarityPhase(polarity=self.kNi845xSpiClockPolarityIdleLow,
                                                phase=self.kNi845xSpiClockPhaseSecondEdge)
         # set clock rate (in kHz)
         self.ni845xSpiScriptClockRate(100)
-        self.ni845xSpiScriptDelay(1)
+        self.ni845xSpiScriptDelay(10)
+        self.ni845xSpiScriptCSLow(CHIPSELECT_GEO_NCP3201)
+        #
+        # ask for two bytes by first sending two bytes
+        indxRead = self.ni845xSpiScriptWriteRead([0, 0])
+        self.ni845xSpiScriptCSHigh(CHIPSELECT_GEO_NCP3201)
+        self.ni845xSpiScriptRun()
+        lOut = self.ni845xSpiScriptExtractReadData(indxRead)
+        # convert to voltage, start by assemblying word
+        word = np.int32(lOut[1] + 256*lOut[0])
+        # shift one bit and filter out 12 bits of data
+        data = np.bitwise_and(2**12-1, np.right_shift(word, 1))
+        # gainINA103 = 1000, dividerR49R51 = 0.33,  VrefMCP3201 = 3.3 therefore VrefMCP3201/gainINA103/dividerR49R51 = 0.01
+        voltage = 0.01 * (data/4096.0)
+        # close script
+        self.ni845xSpiScriptClose()
+        return voltage
 
-        """ 
-        Begin of the actual modification (see function header for descriptions)  
-        """
-        if fullInitialize == True:
-            self.ni845xSpiScriptCSLow(self.chip)
+
+    def readGeophoneVelocity(self):
+        """Read geophone voltage and convert to velocity"""
+        voltage = self.readGeophoneVoltage()
+        # datasheet RTC-10hz, 395ohm, at 1000 Ohm RL 19.7 V/(m/s)
+        return voltage/19.7
+
+
+    def initializeControlRegisterDAC(self):
             #
             # init output (using settings from VI)
             #23: 0 0:write 1:read 
@@ -445,94 +535,7 @@ class ETH_Compact(NI845x):
             # NB!! 3*10 bytes, data seems to be sent with MSB first
             lBytes = [0b00100000, 0b00000000, 0b00010010]*10
             self.ni845xSpiScriptWriteRead(lBytes)
-            # sync operation
-            self.sync()
-            # set all values to zero
-            self.lValue = np.zeros(10)
-            self.copyValuesToDAC()
-            # sync operation
-            self.sync()
-            self.ni845xSpiScriptCSHigh(self.chip)
-        
-        """
-        End of the modifications
-        """
-        
-        # run and close script
-        self.ni845xSpiScriptRun()
-        self.ni845xSpiScriptClose()
-
-
-    def setValue(self, index=0, value=0.0, send_to_instr=True):
-        """Set value to DAQ"""
-        self.lValue[index] = value
-        if send_to_instr:
-            self.sendValues()
-
-
-    def getValue(self, index=0):
-        """Get value from memory"""
-        return self.lValue[index]
-
-
-    def sendValues(self):
-        """Script for sending values to DAC"""
-        # create script
-        self.ni845xSpiScriptOpen() 
-        self.ni845xSpiScriptCSLow(self.chip)
-        # copy values to DAC
-        self.copyValuesToDAC()
-        # sync operation
-        self.sync()
-        self.ni845xSpiScriptCSHigh(self.chip)
-        # run and close script
-        self.ni845xSpiScriptRun()
-        self.ni845xSpiScriptClose()
-
-
-    def readGeophoneVoltage(self):
-        """Read geophone voltage"""
-        # create script
-        self.ni845xSpiScriptOpen()
-#        self.ni845xSpiScriptEnableSPI()
-        #
-        self.ni845xSpiScriptCSHigh(self.chipGeo)
-        # set clock polarity (low in idle, phase centered on second edge)
-        self.ni845xSpiScriptClockPolarityPhase(polarity=self.kNi845xSpiClockPolarityIdleLow,
-                                               phase=self.kNi845xSpiClockPhaseSecondEdge)
-        # set clock rate (in kHz)
-        self.ni845xSpiScriptClockRate(100)
-        self.ni845xSpiScriptDelay(10)
-        self.ni845xSpiScriptCSLow(self.chipGeo)
-        #
-        # ask for two bytes by first sending two bytes
-        indxRead = self.ni845xSpiScriptWriteRead([0, 0])
-        self.ni845xSpiScriptCSHigh(self.chipGeo)
-        self.ni845xSpiScriptRun()
-        lOut = self.ni845xSpiScriptExtractReadData(indxRead)
-        # convert to voltage, start by assemblying word
-        word = np.int32(lOut[1] + 256*lOut[0])
-        # shift one bit and filter out 12 bits of data
-        data = np.bitwise_and(2**12-1, np.right_shift(word, 1))
-        # gainINA103 = 1000, dividerR49R51 = 0.33,  VrefMCP3201 = 3.3 therefore VrefMCP3201/gainINA103/dividerR49R51 = 0.01
-        voltage = 0.01 * (data/4096.0)
-        # close script
-        self.ni845xSpiScriptClose()
-        return voltage
-
-
-    def readGeophoneVelocity(self):
-        """Read geophone voltage and convert to velocity"""
-        voltage = self.readGeophoneVoltage()
-        # datasheet RTC-10hz, 395ohm, at 1000 Ohm RL 19.7 V/(m/s)
-        return voltage/19.7
-
-
-    def sync(self):
-        """Sync operation, write high then low"""
-        self.ni845xSpiScriptDioWriteLine(self.port, line=0, data=1)
-        self.ni845xSpiScriptDioWriteLine(self.port, line=0, data=0)
-
+ 
 
     def copyValuesToDAC(self):
         """Copy values to DAC"""
@@ -552,9 +555,6 @@ class ETH_Compact(NI845x):
             vByte[n*3+2] = np.bitwise_and(255, u32)
         # write data
         self.ni845xSpiScriptWriteRead(vByte)
-        
-        self.saveValueToDisk()
-
 
 
 if __name__ == '__main__':
@@ -563,25 +563,25 @@ if __name__ == '__main__':
     # test driver
     # spi = NI845x('test')
     # print "Error", checkError(-301709)
-    eth = ETH_Compact('compact2012-A')
-    # eth = ETH_Compact('USB0::0x3923::0x7514::01A39834::RAW')
-    t0 = time.time()
-    eth.initialize()
+    compact2012 = ETH_Compact('compact2012-A')
+    # compact2012 = ETH_Compact('USB0::0x3923::0x7514::01A39834::RAW')
+    compact2012.initialize()
     for on in (True, False, True):
-        eth.setLED(on, 5)
-        eth.setLED(not on, 6)
-        eth.setLED(on, 7)
-    eth.setValue(2, -10)
+        compact2012.setLED(on, 5)
+        compact2012.setLED(not on, 6)
+        compact2012.setLED(on, 7)
+    t0 = time.time()
+    compact2012.setValue(0, 2.0)
     print('Time: %.2f ms' % (1000*(time.time() - t0)))
-    eth.setValue(1, 3.8)
+    compact2012.setValue(1, 3.8)
     print('Time: %.2f ms' % (1000*(time.time() - t0)))
-    eth.setValue(0, 2)
+    compact2012.setValue(2, 4.5)
     print('Time: %.2f ms' % (1000*(time.time() - t0)))
     time.sleep(1.0)
-    print(eth.readGeophoneVoltage())
-    print(eth.readGeophoneVoltage())
+    print(compact2012.readGeophoneVoltage())
+    print(compact2012.readGeophoneVoltage())
     print('read volt: %.2f ms' % (1000*(time.time() - t0)))
-    eth.closeConnection()
+    compact2012.closeConnection()
 
     
 

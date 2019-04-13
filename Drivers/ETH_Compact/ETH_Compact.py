@@ -103,6 +103,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
                     # set new value, but do not send to instrument
                     self.spi.setValue(indx, lValue[n]/dScale[indx], send_to_instr=False)
                     # update the quantity to keep driver up-to-date
+                    # Hans: Test if the following line is really called (sweepRate should fail). Use self.perfomrSetValue()??
                     self.setValue('DA%d-voltage' % (indx+1),  lValue[n], 
                                   sweepRate=self.dValuesToSet[indx][1])
             # send the values to the DAC after all values have been updated
