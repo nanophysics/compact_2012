@@ -55,11 +55,13 @@ def checkError(status):
     """Convert the error in status to tuple (error=False, message)"""
     # call function to convert status to string
     func = getattr(DLL, 'ni845xStatusToString')
-    bufferLen = uInt32(1024)
-    msgBuffer = c_char_p(' '*1024)
+    len = 1024
+    bufferLen = uInt32(len)
+    msgBuffer = c_char_p(b' '*len)
     func(int32(status), bufferLen, msgBuffer)
     # convert c str to python string
-    message = str(msgBuffer.value).strip()
+    message = msgBuffer.value
+    message = message.decode('iso-8859-1').strip()
     return (status<0, message)
 
 
@@ -87,7 +89,8 @@ class NI845x():
 #   NiHandle * DeviceHandle
 #   );
     def ni845xOpen(self, resource_name):
-        callFunc('ni845xOpen', c_char_p(resource_name), byref(self.handle))
+        resource_name_bytes = bytes(resource_name, 'utf-8')
+        callFunc('ni845xOpen', c_char_p(resource_name_bytes), byref(self.handle))
 
 
 #kNI845XExport int32 NI845X_FUNC ni845xClose (
