@@ -20,14 +20,15 @@ class Error(Exception):
 # open dll
 try:
     # if failure, try to open in driver folder
-    sPath = os.path.dirname(os.path.abspath(__file__))
-    DLL = ctypes.WinDLL('Ni845x')
-except:
+    sDllFilename = 'Ni845x.dll'
+    DLL = ctypes.WinDLL(sDllFilename)
+except Exception as e:
     raise
-    print 'import dll from path'
+    print('failed to import dll {}: {}'.format(sDllFilename, e))
     # if failure, try to open in driver folder
     sPath = os.path.dirname(os.path.abspath(__file__))
-    DLL = ctypes.WinDLL(os.path.join(sPath, 'Ni845x'))
+    print('try to import dll {} from {}'.format(sDllFilename, sPath))
+    DLL = ctypes.WinDLL(os.path.join(sPath, sDllFilename))
 
 
 # helper function for calling DLL functions and checking errors
@@ -348,18 +349,19 @@ class ETH_Compact(NI845x):
 
     def loadValuesFromDisk(self):
         """Load values from disk"""
-        try:
-            # open and convert to numbers
-            with open(self.sFile, 'r') as f:
-                s = f.read()
-            v = np.fromstring(s, sep=',')
-            # make sure we have ten elements
-            if len(v) == 10:
-                self.lValue = v
-        except Exception as e:
-            # ignore errors
-            print str(e)
-            pass
+        if not os.path.exists(self.sFile):
+            print('"{}": No Compact settings found. Initialize to 0.'.format(self.sFile))
+
+        # open and convert to numbers
+        with open(self.sFile, 'r') as f:
+            s = f.read()
+        v = np.fromstring(s, sep=',')
+        # make sure we have ten elements
+        if len(v) != 10:
+            print('"{}": Compact settings expected 10 values but got "{}". Initialize to 0.'.format(self.sFile, s))
+            return
+        self.lValue = v
+
 
 
     def saveValueToDisk(self):
@@ -569,15 +571,15 @@ if __name__ == '__main__':
     eth.setLED(False, 6)
     eth.setLED(False, 7)
     eth.setValue(2, -10)
-    print 'Time: %.2f ms' % (1000*(time.time() - t0))
+    print('Time: %.2f ms' % (1000*(time.time() - t0)))
     eth.setValue(1, 3.8)
-    print 'Time: %.2f ms' % (1000*(time.time() - t0))
+    print('Time: %.2f ms' % (1000*(time.time() - t0)))
     eth.setValue(0, 2)
-    print 'Time: %.2f ms' % (1000*(time.time() - t0))
+    print('Time: %.2f ms' % (1000*(time.time() - t0)))
     time.sleep(1.0)
-    print eth.readGeophoneVoltage()
-    print eth.readGeophoneVoltage()
-    print 'read volt: %.2f ms' % (1000*(time.time() - t0))
+    print(eth.readGeophoneVoltage())
+    print(eth.readGeophoneVoltage())
+    print('read volt: %.2f ms' % (1000*(time.time() - t0)))
     eth.closeConnection()
 
     
