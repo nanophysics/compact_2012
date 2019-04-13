@@ -27,56 +27,15 @@ class Driver(InstrumentDriver.InstrumentWorker):
         """Perform the operation of opening the instrument connection"""
         # init object
         self.spi = None
-        # get options
-        bSave = 'Store values on disk' in self.getOptions()
-        
-        # Start Modification by Palm Marius on 24.08.2016
-        bReset = 'Reset instrument at startup (All values are set to 0!)' in self.getOptions()
-        # End Modification
 
         # open connection
         sAddress = str(self.comCfg.address)
         # USB0::0x3923::0x7514::01A39834::RAW
-        self.spi = Ni845x_Wrapper.ETH_Compact(sAddress, save_to_disk=bSave) 
-        
-        # Begin Modification by Palm Marius on 24.08.2016
-        # Keep bReset option for compatibility with older drivers
-        if bReset:
-            self.spi.initialize()    
-            # self.spi.initialize() actually sets all values to 0 but does not update the driver!
-            for indx in np.arange(10):
-                self.setValue('DA%d-voltage' % (indx+1), 0)
-        else:
-            # Prompt the user to enter whether he wants to initialize the compact
-            userInput = self.getValueFromUserDialog(0.0,
-             'Do wou want to initialize the Compact (Required only after power-up, sets all values to 0). Enter 1 for yes, 0 for no.', 
-             title='Initialize Compact')
-            # parse response
-            try:
-                bInit = (int(userInput) != 0)
-            except:
-                # ignore errors but don't reset
-                bInit = False
-            # userInput = win32api.MessageBox(0,'Do wou want to initialize the Compact (Required only after power-up, sets all values to 0)','Initialize Compact',0x00000004L)
-            # # userInput == 6 --> Yes
-            # # userInput == 7 --> No
-            # if userInput == 6:
-            if bInit:
-                # Do a full initialization
-                self.log('ETH Compact Driver: Full Initialization triggered at startup')
-                self.spi.initialize(True)
-                # self.spi.initialize actually sets all values to 0 but does not update the driver!
-                for indx in np.arange(10):
-                    self.setValue('DA%d-voltage' % (indx+1), 0)
-                
-            else:
-                # Reset the usb connection(it should not change the applied voltages)
-                self.log('ETH Compact Driver: Connection resetted at startup')
-                self.spi.initialize(False)
-        
-         # Previous modifications from 18.08.2016 removed        
-        
-         # End Modification        
+        self.spi = Ni845x_Wrapper.ETH_Compact(sAddress) 
+    
+        # Reset the usb connection(it should not change the applied voltages)
+        self.log('ETH Compact Driver: Connection resetted at startup')
+        self.spi.initialize(False)      
 
     def performClose(self, bError=False, options={}):
         """Perform the close instrument connection operation"""

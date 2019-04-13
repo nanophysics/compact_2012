@@ -330,30 +330,29 @@ class NI845x():
 class ETH_Compact(NI845x):
     """Represents the ETH compact voltage source, using the NI USB 845x"""
 
-    def __init__(self, resource_name, save_to_disk=False):
+    def __init__(self, resource_name):
         """The init case defines a session ID, used to identify the instrument"""
         # init variables
-        self.save_to_disk = save_to_disk
         self.chip = 0
         self.chipGeo = 1
         self.port = 0
-        # keep track of values (10 voltages)
-        self.lValue = np.zeros(10)
+
+        # get file name for saving data
+        sPath = os.path.dirname(os.path.abspath(__file__))
+        self.sFile = os.path.join(sPath, ('Values-%s.txt' % str(resource_name)))
+
+        # try to load old values
+        self.lValue = self.loadValuesFromDisk()
+
         # start with opening NI845x
         NI845x.__init__(self, resource_name)
-        #
-        # get file name for saving data
-        if self.save_to_disk:
-            sPath = os.path.dirname(os.path.abspath(__file__))
-            self.sFile = os.path.join(sPath, ('Values-%s.txt' % str(resource_name)))
-            # try to load old values
-            self.loadValuesFromDisk()
-
 
     def loadValuesFromDisk(self):
         """Load values from disk"""
         if not os.path.exists(self.sFile):
             print('"{}": No Compact settings found. Initialize to 0.'.format(self.sFile))
+            # keep track of values (10 voltages)
+            return np.zeros(10)
 
         # open and convert to numbers
         with open(self.sFile, 'r') as f:
@@ -362,9 +361,8 @@ class ETH_Compact(NI845x):
         # make sure we have ten elements
         if len(v) != 10:
             print('"{}": Compact settings expected 10 values but got "{}". Initialize to 0.'.format(self.sFile, s))
-            return
-        self.lValue = v
-
+            return np.zeros(10)
+        return v
 
 
     def saveValueToDisk(self):
@@ -554,9 +552,8 @@ class ETH_Compact(NI845x):
             vByte[n*3+2] = np.bitwise_and(255, u32)
         # write data
         self.ni845xSpiScriptWriteRead(vByte)
-        # save to disk, if wanted
-        if self.save_to_disk:
-            self.saveValueToDisk()
+        
+        self.saveValueToDisk()
 
 
 
@@ -564,15 +561,16 @@ if __name__ == '__main__':
     #
     import time
     # test driver
-#    spi = NI845x('test')
-#    print "Error", checkError(-301709)
-    eth = ETH_Compact('8452')
-#    eth = ETH_Compact('USB0::0x3923::0x7514::01A39834::RAW')
+    # spi = NI845x('test')
+    # print "Error", checkError(-301709)
+    eth = ETH_Compact('compact2012-A')
+    # eth = ETH_Compact('USB0::0x3923::0x7514::01A39834::RAW')
     t0 = time.time()
     eth.initialize()
-    eth.setLED(False, 5)
-    eth.setLED(False, 6)
-    eth.setLED(False, 7)
+    for on in (True, False, True):
+        eth.setLED(on, 5)
+        eth.setLED(not on, 6)
+        eth.setLED(on, 7)
     eth.setValue(2, -10)
     print('Time: %.2f ms' % (1000*(time.time() - t0)))
     eth.setValue(1, 3.8)
