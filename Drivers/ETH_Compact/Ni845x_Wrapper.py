@@ -32,6 +32,7 @@ LED_RED=5
 LED_GREEN=6
 LED_BLUE=7
 
+SAVE_VALUES_TO_DISK_TIME_S=1.0
 GEOPHONE_RESET_TIME_S=3.0
 LED_VIBRATION_THRESHOLD_MAX_V=0.01
 LED_BLUE_TOGGLE_S=0.3
@@ -403,6 +404,7 @@ class ETH_Compact(NI845x):
         self.led_red_vibration_on = False
         self.led_blue_DAC_activity_toggle_timestamp = 0.0
         self.led_blue_DAC_activity_on = False
+        self.save_values_to_file_timestamp = 0.0
 
         # start with opening NI845x
         NI845x.__init__(self, resource_name)
@@ -424,11 +426,18 @@ class ETH_Compact(NI845x):
             return np.zeros(10)
         return v
 
-
     def saveValueToDisk(self):
-        """Save current values to disk"""
+        """
+        Save current values to disk
+        Only save once per SAVE_VALUES_TO_DISK_TIME_S for better performance.
+        """
+        now = time.time()
+        if now < self.save_values_to_file_timestamp:
+            return
+        self.save_values_to_file_timestamp = now + SAVE_VALUES_TO_DISK_TIME_S
+        s = ','.join([str(a) for a in self.lValue])
         with open(self.sFile, 'w') as f:
-            f.write(','.join([str(a) for a in self.lValue]))
+            f.write(s)
 
     def update_leds_red_blue(self):
         # LED red is on if vibration
@@ -436,8 +445,8 @@ class ETH_Compact(NI845x):
 
         # LED blue blinks is the is data
         now = time.time()
-        if now > self.led_blue_DAC_activity_toggle_timestamp + LED_BLUE_TOGGLE_S:
-            self.led_blue_DAC_activity_toggle_timestamp = now
+        if now > self.led_blue_DAC_activity_toggle_timestamp:
+            self.led_blue_DAC_activity_toggle_timestamp = now + LED_BLUE_TOGGLE_S
             self.led_blue_DAC_activity_on = not self.led_blue_DAC_activity_on
 
     """ 
@@ -666,9 +675,7 @@ if __name__ == '__main__':
     # compact2012 = ETH_Compact('USB0::0x3923::0x7514::01A39834::RAW')
     compact2012.initialize()
     for on in (True, False, True):
-        compact2012.setLED(on, 5)
-        compact2012.setLED(not on, 6)
-        compact2012.setLED(on, 7)
+        compact2012.setUserLED(on)
     t0 = time.time()
     compact2012.setValue(0, 2.0)
     print('Time: %.2f ms' % (1000*(time.time() - t0)))
