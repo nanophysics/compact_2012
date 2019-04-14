@@ -17,6 +17,7 @@ NiHandle = c_uint32
 class Error(Exception):
     pass
 
+
 INPUT=0
 OUTPUT=1
 LINE_LDAC=2
@@ -24,6 +25,45 @@ LINE_SYNC=0
 CHIPSELECT_AD5791=0
 CHIPSELECT_GEO_NCP3201=1
 PORT=0
+
+DETECT_MEMORY_LEAK=True
+
+if DETECT_MEMORY_LEAK:
+    # See: https://docs.python.org/3/library/tracemalloc.html
+    import tracemalloc
+    tracemalloc_count = 0
+
+    try:
+        import psutil
+        def print_mem(f):
+            # https://stackoverflow.com/questions/938733/total-memory-used-by-python-process
+            # https://psutil.readthedocs.io/en/latest/
+            process = psutil.Process(os.getpid())
+            print('{} bytes rss (Resident Set Size)'.format(process.memory_info().rss), file=f)
+            print('{} bytes vms (Virtual Memory Size)'.format(process.memory_info().vms), file=f)
+            print('{} bytes pagefile'.format(process.memory_info().pagefile), file=f)
+    except ImportError:
+        def print_mem(f):
+            print('psutil not installed', file=f)
+
+    def tracemalloc_dump():
+        global tracemalloc_count
+        tracemalloc_count += 1
+
+        if tracemalloc_count % 1000 != 0:
+            return
+
+        if tracemalloc_count == 1000:
+            tracemalloc.start()
+            return
+
+        sTracemallocPath = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tracemalloc_{:04}.txt'.format(tracemalloc_count))
+        snapshot = tracemalloc.take_snapshot()
+        top_stats = snapshot.statistics('lineno')
+        with open(sTracemallocPath, 'w') as f:
+            for stat in top_stats[:10]:
+                print(stat, file=f)
+            print_mem(f)
 
 # open dll
 try:
@@ -466,6 +506,8 @@ class ETH_Compact(NI845x):
 
         self.saveValueToDisk()
 
+        tracemalloc_dump()
+
     def readGeophoneVoltage(self):
         """Read geophone voltage"""
         # create script
@@ -577,6 +619,15 @@ if __name__ == '__main__':
     print('Time: %.2f ms' % (1000*(time.time() - t0)))
     compact2012.setValue(2, 4.5)
     print('Time: %.2f ms' % (1000*(time.time() - t0)))
+
+    
+    t0 = time.time()
+    count = 4000
+    for i in range(count):
+        compact2012.setValue(0, 10.0*(i%2))
+    print('Averarge time for {} measurements {:.3f} ms'.format(count, 1000.0/count*(time.time() - t0)))
+
+
     time.sleep(1.0)
     print(compact2012.readGeophoneVoltage())
     print(compact2012.readGeophoneVoltage())

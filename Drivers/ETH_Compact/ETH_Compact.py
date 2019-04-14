@@ -35,7 +35,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
     
         # Reset the usb connection(it should not change the applied voltages)
         self.log('ETH Compact Driver: Connection resetted at startup')
-        self.spi.initialize(False)      
+        self.spi.initialize()      
 
     def performClose(self, bError=False, options={}):
         """Perform the close instrument connection operation"""
