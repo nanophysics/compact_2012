@@ -419,6 +419,7 @@ class ETH_Compact(NI845x):
         # open and convert to numbers
         with open(self.sFile, 'r') as f:
             s = f.read()
+        # s: 8.936,4.0,3.56,0.0,0.0,0.0,0.0,0.0,0.0,0.0
         v = np.fromstring(s, sep=',')
         # make sure we have ten elements
         if len(v) != 10:
@@ -461,12 +462,12 @@ class ETH_Compact(NI845x):
             OUTPUT,   # Pin SYNC auf der Leiterplatte compact_2012_da fuer den DA Wandler AD5791
             OUTPUT,   # reserve, soll nicht floaten
             INPUT,    # ab mod2019 geschaltet
-                           # auf LDAC von DA Wandler AD5791, bei Puls auf 0V werde die Werte 
-                           # auf den DA Ausgang uebernommen. Hat pullup auf Leiterplatte, normal als 
-                           # Eingang schalten damit sicher keine Uebernahme aus Versehen.
+                      # auf LDAC von DA Wandler AD5791, bei Puls auf 0V werde die Werte 
+                      # auf den DA Ausgang uebernommen. Hat pullup auf Leiterplatte, normal als 
+                      # Eingang schalten damit sicher keine Uebernahme aus Versehen.
             OUTPUT,   # reserve, soll nicht floaten,
             OUTPUT,   # Temperaturregler Leiterplatte compact_2012_vib_heiz, 
-                           # soll nicht floaten
+                      # soll nicht floaten
             OUTPUT,   # LED rot "Erschuetterung"
             OUTPUT,   # LED gruen "Benutzer"
             OUTPUT,   # LED blau "DA activity"
@@ -479,12 +480,11 @@ class ETH_Compact(NI845x):
         #
         self.ni845xSpiScriptCSHigh(CHIPSELECT_AD5791)
         self.ni845xSpiScriptCSHigh(CHIPSELECT_GEO_MCP3201)
-        # write logical 0 to line 0 (sync/init)
-        self.ni845xSpiScriptDioWriteLine(PORT, line=LINE_SYNC, data=0)
         # set clock polarity (low in idle, phase centered on second edge)
         self.ni845xSpiScriptClockPolarityPhase(polarity=self.kNi845xSpiClockPolarityIdleLow,
                                                phase=self.kNi845xSpiClockPhaseSecondEdge)
         # set clock rate (in kHz)
+        # 2019-04-14, Peter Maerki, Successfully tested with 10000. Choosen 1000 which is still very fast!
         self.ni845xSpiScriptClockRate(1000)
         self.ni845xSpiScriptDelay(1)
         
@@ -674,7 +674,7 @@ if __name__ == '__main__':
     compact2012 = ETH_Compact('compact2012-A')
     # compact2012 = ETH_Compact('USB0::0x3923::0x7514::01A39834::RAW')
     compact2012.initialize()
-    for on in (True, False, True):
+    for on in (True, False, True, False):
         compact2012.setUserLED(on)
     t0 = time.time()
     compact2012.setValue(0, 2.0)

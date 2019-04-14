@@ -31,7 +31,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
         # USB0::0x3923::0x7514::01A39834::RAW
         self.spi = Ni845x_Wrapper.ETH_Compact(sAddress) 
     
-        # Reset the usb connection(it should not change the applied voltages)
+        # Reset the usb connection (it must not change the applied voltages)
         self.log('ETH Compact Driver: Connection resetted at startup')
         self.spi.initialize()      
 
@@ -45,7 +45,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
         return the actual value set by the instrument"""
         # keep track of multiple calls, to set multiple voltages efficiently
         if self.isFirstCall(options):
-            self.dValuesToSet = {}
+            self.dDacValuesToSet = {}
         if quant.name == 'Green LED':
             # set user LED
             self.spi.setUserLED(bool(value))            
@@ -55,7 +55,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
             # Parse quant.name="DA3-voltage" -> 3 -> 2
             indx = int(quant.name.strip().split('-')[0][2:]) - 1
             # don't set, just add to dict with values to be set (value, rate)
-            self.dValuesToSet[indx] = [value, sweepRate]
+            self.dDacValuesToSet[indx] = [value, sweepRate]
         elif quant.name.endswith('-jumper setting'):
             # get index of channel to set
             # Hack...
@@ -68,7 +68,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
         elif quant.name == 'Geophone red LED threshold':
             value = max(0.0, min(100.0, value))
             self.spi.led_vibration_threshold_percent = value
-        if self.isFinalCall(options) and len(self.dValuesToSet)>0:
+        if self.isFinalCall(options) and len(self.dDacValuesToSet)>0:
             self.setMultipleValues()
         return value
 
@@ -76,11 +76,11 @@ class Driver(InstrumentDriver.InstrumentWorker):
     def setMultipleValues(self):
         """Set multiple values at once, with support for sweeping"""
         # sweep set interval, in seconds
-        dInterval = 0.05
+        dInterval_s = 0.03
         # create vectors of values to set for each channel
         dValues = {}
         dScale = {}
-        for indx, [value, sweepRate] in self.dValuesToSet.items():
+        for indx, [value, sweepRate] in self.dDacValuesToSet.items():
             # first, get and store scale for this channel
             sRange = self.getValue('DA%d-jumper setting' % (indx+1))
             dScale[indx] = self.dRange[sRange]
@@ -92,7 +92,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
             else:
                 # get number of steps
                 dSweepTime = abs(value-currValue)/sweepRate
-                nStep = int(np.ceil(dSweepTime/dInterval))
+                nStep = int(np.ceil(dSweepTime/dInterval_s))
                 # create step points, excluding start point
                 dValues[indx] = np.linspace(currValue, value, nStep+1)[1:]
         # perform sweeping by setting values at each step
@@ -107,9 +107,8 @@ class Driver(InstrumentDriver.InstrumentWorker):
                     # set new value, but do not send to instrument
                     self.spi.setValue(indx, lValue[n]/dScale[indx], send_to_instr=False)
                     # update the quantity to keep driver up-to-date
-                    # Hans: Test if the following line is really called (sweepRate should fail). Use self.perfomrSetValue()??
                     self.setValue('DA%d-voltage' % (indx+1),  lValue[n], 
-                                  sweepRate=self.dValuesToSet[indx][1])
+                                  sweepRate=self.dDacValuesToSet[indx][1])
             # send the values to the DAC after all values have been updated
             self.spi.sendValues()
             # check if stopped 
@@ -118,7 +117,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
             # wait some time, if necessary (not for last step)
             if (n+1)<nMaxStep:
                 dt = time.time() - t0
-                waitTime = dInterval*(n+1) - dt
+                waitTime = dInterval_s*(n+1) - dt
                 if waitTime > 0.0:
                     self.wait(waitTime)
 
@@ -126,7 +125,6 @@ class Driver(InstrumentDriver.InstrumentWorker):
     def checkIfSweeping(self, quant):
         """Always return false, sweeping is done in loop"""
         return False
-
 
     def performGetValue(self, quant, options={}):
         """Perform the Get Value instrument operation"""
@@ -139,6 +137,8 @@ class Driver(InstrumentDriver.InstrumentWorker):
             value = self.spi.led_vibration_threshold_percent
         elif quant.name.endswith('-voltage'):
             # get index of channel to get
+            # Hack...
+            # Parse quant.name="DA3-voltage" -> 3 -> 2
             indx = int(quant.name.strip().split('-')[0][2:]) - 1
             # get value from driver, then return scaled value
             sRange = self.getValue('DA%d-jumper setting' % (indx+1))
