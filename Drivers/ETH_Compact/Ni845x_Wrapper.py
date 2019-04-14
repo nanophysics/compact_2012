@@ -28,6 +28,17 @@ CHIPSELECT_AD5791=0
 CHIPSELECT_GEO_MCP3201=1
 PORT=0
 
+LED_RED=5
+LED_GREEN=6
+LED_BLUE=7
+
+GEOPHONE_RESET_TIME_S=3.0
+LED_VIBRATION_THRESHOLD_MAX_V=0.01
+LED_BLUE_TOGGLE_S=0.3
+
+# datasheet RTC-10hz, 395ohm, at 1000 Ohm RL 19.7 V/(m/s)
+GEOPHONE_VOLTAGE_TO_PARTICLEVELOCITY_FACTOR=19.7
+
 DETECT_MEMORY_LEAK=True
 
 if DETECT_MEMORY_LEAK:
@@ -385,8 +396,13 @@ class ETH_Compact(NI845x):
         sPath = os.path.dirname(os.path.abspath(__file__))
         self.sFile = os.path.join(sPath, ('Values-%s.txt' % str(resource_name)))
 
+        self.led_vibration_threshold_percent = LED_VIBRATION_THRESHOLD_MAX_V
         self.geophone_voltage = 0.0
         self.geophone_timestamp = 0.0
+        self.led_green_user_on = False
+        self.led_red_vibration_on = False
+        self.led_blue_DAC_activity_toggle_timestamp = 0.0
+        self.led_blue_DAC_activity_on = False
 
         # start with opening NI845x
         NI845x.__init__(self, resource_name)
@@ -414,13 +430,15 @@ class ETH_Compact(NI845x):
         with open(self.sFile, 'w') as f:
             f.write(','.join([str(a) for a in self.lValue]))
 
+    def update_leds_red_blue(self):
+        # LED red is on if vibration
+        self.led_red_vibration_on = self.geophone_voltage/LED_VIBRATION_THRESHOLD_MAX_V  > self.led_vibration_threshold_percent/100.0
 
-    def setLED(self, value=True, iLED=5):
-        """Set LED"""
-        self.ni845xSpiScriptOpen()
-        self.ni845xSpiScriptDioWriteLine(PORT, line=iLED, data=int(value))
-        self.ni845xSpiScriptRun()
-        self.ni845xSpiScriptClose()
+        # LED blue blinks is the is data
+        now = time.time()
+        if now > self.led_blue_DAC_activity_toggle_timestamp + LED_BLUE_TOGGLE_S:
+            self.led_blue_DAC_activity_toggle_timestamp = now
+            self.led_blue_DAC_activity_on = not self.led_blue_DAC_activity_on
 
     """ 
     This initializes the SPI-Card.
@@ -441,8 +459,8 @@ class ETH_Compact(NI845x):
             OUTPUT,   # Temperaturregler Leiterplatte compact_2012_vib_heiz, 
                            # soll nicht floaten
             OUTPUT,   # LED rot "Erschuetterung"
-            OUTPUT,   # LED gruen "AD"
-            OUTPUT,   # LED blau "DA"
+            OUTPUT,   # LED gruen "Benutzer"
+            OUTPUT,   # LED blau "DA activity"
         ]
         assert len(lOutput) == 8
         self.ni845xDioSetPortLineDirectionMap(port=PORT, lOutput=lOutput)
@@ -475,14 +493,21 @@ class ETH_Compact(NI845x):
         if send_to_instr:
             self.sendValues()
 
-
     def getValue(self, index=0):
         """Get value from memory"""
         return self.lValue[index]
 
+    def setUserLED(self, value):
+        assert isinstance(value, bool), 'Value={}, Type={}'.format(value, type(value))
+        old_value = self.led_green_user_on
+        self.led_green_user_on = value
+        if old_value != self.led_green_user_on:
+            self.sendValues()
 
     def sendValues(self):
         """Script for sending values to DAC"""
+        self.update_leds_red_blue()
+
         # create script
         self.ni845xSpiScriptOpen() 
 
@@ -512,6 +537,13 @@ class ETH_Compact(NI845x):
         self.ni845xSpiScriptDioConfigureLine(PORT, line=LINE_LDAC, configValue=INPUT)
 
         self.ni845xSpiScriptCSHigh(CHIPSELECT_AD5791)
+
+        #
+        # Set LED's
+        #
+        self.ni845xSpiScriptDioWriteLine(PORT, line=LED_RED, data=int(self.led_red_vibration_on))
+        self.ni845xSpiScriptDioWriteLine(PORT, line=LED_GREEN, data=int(self.led_green_user_on))
+        self.ni845xSpiScriptDioWriteLine(PORT, line=LED_BLUE, data=int(self.led_blue_DAC_activity_on))
 
         #
         # Initiate Geophone read
@@ -546,21 +578,32 @@ class ETH_Compact(NI845x):
         tracemalloc_dump()
 
     def readGeophoneVoltage(self):
-        """Read geophone voltage"""
+        """
+        Might use the cashed value or read it from Compact2012.
+        Read geophone voltage
+        """
         # The last measured voltage...
-        GEOPHONE_RESET_TIME_S=3.0
         if time.time() > self.geophone_timestamp + GEOPHONE_RESET_TIME_S:
             # This will read the geophone
             self.sendValues()
         return self.geophone_voltage
 
-
-    def readGeophoneVelocity(self):
-        """Read geophone voltage and convert to velocity"""
+    def readGeophoneParticleVelocity(self):
+        """
+        Might use the cashed value or read it from Compact2012.
+        Read geophone voltage and convert to velocity
+        """
         voltage = self.readGeophoneVoltage()
-        # datasheet RTC-10hz, 395ohm, at 1000 Ohm RL 19.7 V/(m/s)
-        return voltage/19.7
+        return voltage/GEOPHONE_VOLTAGE_TO_PARTICLEVELOCITY_FACTOR
 
+    def readGeophonePercent(self):
+        """
+        Might use the cashed value or read it from Compact2012.
+        Read geophone voltage and convert to percent (0..100.0)
+        """
+        voltage = self.readGeophoneVoltage()
+        percent = voltage/LED_VIBRATION_THRESHOLD_MAX_V*100.0
+        return max(0.0, min(100.0, percent))
 
     def initializeControlRegisterDAC(self):
             #

@@ -12,8 +12,6 @@ class Error(Exception):
 class Driver(InstrumentDriver.InstrumentWorker):
     """ This class implements the Acqiris card driver"""
 
-    # LED index
-    dLED = {'Red LED': 5, 'Green LED': 6, 'Blue LED': 7}
     # ranges and scaling
     dRange = {'+/- 10 V, change by hand': 1.0,
               '+/- 5 V, change by hand': 0.5,
@@ -48,10 +46,9 @@ class Driver(InstrumentDriver.InstrumentWorker):
         # keep track of multiple calls, to set multiple voltages efficiently
         if self.isFirstCall(options):
             self.dValuesToSet = {}
-        if quant.name in self.dLED:
-            # set LED, get channel to set
-            iLED = self.dLED[quant.name]
-            self.spi.setLED(int(value), int(iLED))            
+        if quant.name == 'Green LED':
+            # set user LED
+            self.spi.setUserLED(bool(value))            
         elif quant.name.endswith('-voltage'):
             # get index of channel to set
             # Hack...
@@ -68,6 +65,9 @@ class Driver(InstrumentDriver.InstrumentWorker):
             quant.setValue(value)
             self.readValueFromOther('DA%d-voltage' % (indx+1))
         # if final call and voltages have been changed, send them at once
+        elif quant.name == 'Geophone red LED threshold':
+            value = max(0.0, min(100.0, value))
+            self.spi.led_vibration_threshold_percent = value
         if self.isFinalCall(options) and len(self.dValuesToSet)>0:
             self.setMultipleValues()
         return value
@@ -131,10 +131,12 @@ class Driver(InstrumentDriver.InstrumentWorker):
     def performGetValue(self, quant, options={}):
         """Perform the Get Value instrument operation"""
         # only implmeneted for geophone voltage
-        if quant.name == 'Geophone voltage':
-            value = self.spi.readGeophoneVoltage()
-        elif quant.name == 'Geophone velocity':
-            value = self.spi.readGeophoneVelocity()
+        if quant.name == 'Geophone percent':
+            value = self.spi.readGeophonePercent()
+        elif quant.name == 'Geophone particle velocity':
+            value = self.spi.readGeophoneParticleVelocity()
+        elif quant.name == 'Geophone red LED threshold':
+            value = self.spi.led_vibration_threshold_percent
         elif quant.name.endswith('-voltage'):
             # get index of channel to get
             indx = int(quant.name.strip().split('-')[0][2:]) - 1
