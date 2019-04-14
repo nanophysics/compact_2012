@@ -54,11 +54,15 @@ class Driver(InstrumentDriver.InstrumentWorker):
             self.spi.setLED(int(value), int(iLED))            
         elif quant.name.endswith('-voltage'):
             # get index of channel to set
+            # Hack...
+            # Parse quant.name="DA3-voltage" -> 3 -> 2
             indx = int(quant.name.strip().split('-')[0][2:]) - 1
             # don't set, just add to dict with values to be set (value, rate)
             self.dValuesToSet[indx] = [value, sweepRate]
         elif quant.name.endswith('-jumper setting'):
             # get index of channel to set
+            # Hack...
+            # Parse quant.name="DA3-jumper" -> 3 -> 2
             indx = int(quant.name.strip().split('-')[0][2:]) - 1
             # read corresponding voltage to update scaling
             quant.setValue(value)

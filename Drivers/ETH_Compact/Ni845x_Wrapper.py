@@ -1,5 +1,7 @@
 import ctypes, os
 import numpy as np
+import time
+
 from ctypes import (c_int, c_uint8, c_int16, c_uint16, c_int32, c_uint32, 
                     c_char_p, byref)
 
@@ -23,7 +25,7 @@ OUTPUT=1
 LINE_LDAC=2
 LINE_SYNC=0
 CHIPSELECT_AD5791=0
-CHIPSELECT_GEO_NCP3201=1
+CHIPSELECT_GEO_MCP3201=1
 PORT=0
 
 DETECT_MEMORY_LEAK=True
@@ -383,6 +385,9 @@ class ETH_Compact(NI845x):
         sPath = os.path.dirname(os.path.abspath(__file__))
         self.sFile = os.path.join(sPath, ('Values-%s.txt' % str(resource_name)))
 
+        self.geophone_voltage = 0.0
+        self.geophone_timestamp = 0.0
+
         # start with opening NI845x
         NI845x.__init__(self, resource_name)
 
@@ -446,6 +451,7 @@ class ETH_Compact(NI845x):
         self.ni845xSpiScriptEnableSPI()
         #
         self.ni845xSpiScriptCSHigh(CHIPSELECT_AD5791)
+        self.ni845xSpiScriptCSHigh(CHIPSELECT_GEO_MCP3201)
         # write logical 0 to line 0 (sync/init)
         self.ni845xSpiScriptDioWriteLine(PORT, line=LINE_SYNC, data=0)
         # set clock polarity (low in idle, phase centered on second edge)
@@ -479,7 +485,12 @@ class ETH_Compact(NI845x):
         """Script for sending values to DAC"""
         # create script
         self.ni845xSpiScriptOpen() 
+
+        #
+        # Write DAC
+        #
         self.ni845xSpiScriptCSLow(CHIPSELECT_AD5791)
+        self.ni845xSpiScriptUsDelay(delay=1)
 
         self.ni845xSpiScriptDioWriteLine(PORT, line=LINE_SYNC, data=0)
         self.initializeControlRegisterDAC()
@@ -501,8 +512,34 @@ class ETH_Compact(NI845x):
         self.ni845xSpiScriptDioConfigureLine(PORT, line=LINE_LDAC, configValue=INPUT)
 
         self.ni845xSpiScriptCSHigh(CHIPSELECT_AD5791)
+
+        #
+        # Initiate Geophone read
+        #
+        self.ni845xSpiScriptCSLow(CHIPSELECT_GEO_MCP3201)
+        self.ni845xSpiScriptUsDelay(delay=1)
+
+        # ask for two bytes by first sending two bytes
+        indxRead = self.ni845xSpiScriptWriteRead([0, 0])
+        self.ni845xSpiScriptCSHigh(CHIPSELECT_GEO_MCP3201)
+
+        # 
+        # Run the script
+        #
         self.ni845xSpiScriptRun()
         self.ni845xSpiScriptClose()
+
+        #
+        # Read Geophone data
+        #
+        lOut = self.ni845xSpiScriptExtractReadData(indxRead)
+        # convert to voltage, start by assemblying word
+        word = np.int32(lOut[1] + 256*lOut[0])
+        # shift one bit and filter out 12 bits of data
+        data = np.bitwise_and(2**12-1, np.right_shift(word, 1))
+        # gainINA103 = 1000, dividerR49R51 = 0.33,  VrefMCP3201 = 3.3 therefore VrefMCP3201/gainINA103/dividerR49R51 = 0.01
+        self.geophone_voltage = 0.01 * (data/4096.0)
+        self.geophone_timestamp = time.time()
 
         self.saveValueToDisk()
 
@@ -510,33 +547,12 @@ class ETH_Compact(NI845x):
 
     def readGeophoneVoltage(self):
         """Read geophone voltage"""
-        # create script
-        self.ni845xSpiScriptOpen()
-        # self.ni845xSpiScriptEnableSPI()
-        #
-        self.ni845xSpiScriptCSHigh(CHIPSELECT_GEO_NCP3201)
-        # set clock polarity (low in idle, phase centered on second edge)
-        self.ni845xSpiScriptClockPolarityPhase(polarity=self.kNi845xSpiClockPolarityIdleLow,
-                                               phase=self.kNi845xSpiClockPhaseSecondEdge)
-        # set clock rate (in kHz)
-        self.ni845xSpiScriptClockRate(100)
-        self.ni845xSpiScriptDelay(10)
-        self.ni845xSpiScriptCSLow(CHIPSELECT_GEO_NCP3201)
-        #
-        # ask for two bytes by first sending two bytes
-        indxRead = self.ni845xSpiScriptWriteRead([0, 0])
-        self.ni845xSpiScriptCSHigh(CHIPSELECT_GEO_NCP3201)
-        self.ni845xSpiScriptRun()
-        lOut = self.ni845xSpiScriptExtractReadData(indxRead)
-        # convert to voltage, start by assemblying word
-        word = np.int32(lOut[1] + 256*lOut[0])
-        # shift one bit and filter out 12 bits of data
-        data = np.bitwise_and(2**12-1, np.right_shift(word, 1))
-        # gainINA103 = 1000, dividerR49R51 = 0.33,  VrefMCP3201 = 3.3 therefore VrefMCP3201/gainINA103/dividerR49R51 = 0.01
-        voltage = 0.01 * (data/4096.0)
-        # close script
-        self.ni845xSpiScriptClose()
-        return voltage
+        # The last measured voltage...
+        GEOPHONE_RESET_TIME_S=3.0
+        if time.time() > self.geophone_timestamp + GEOPHONE_RESET_TIME_S:
+            # This will read the geophone
+            self.sendValues()
+        return self.geophone_voltage
 
 
     def readGeophoneVelocity(self):
@@ -600,8 +616,6 @@ class ETH_Compact(NI845x):
 
 
 if __name__ == '__main__':
-    #
-    import time
     # test driver
     # spi = NI845x('test')
     # print "Error", checkError(-301709)
