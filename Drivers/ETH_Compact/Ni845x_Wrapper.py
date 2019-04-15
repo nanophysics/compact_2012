@@ -459,18 +459,18 @@ class ETH_Compact(NI845x):
         # configure device
         self.ni845xSetIoVoltageLevel(self.kNi845x33Volts)
         lOutput=[
-            OUTPUT,   # Pin SYNC auf der Leiterplatte compact_2012_da fuer den DA Wandler AD5791
-            OUTPUT,   # reserve, soll nicht floaten
-            INPUT,    # ab mod2019 geschaltet
+            OUTPUT,   # DIO(0) Pin SYNC auf der Leiterplatte compact_2012_da fuer den DA Wandler AD5791
+            OUTPUT,   # DIO(1) reserve, soll nicht floaten
+            INPUT,    # DIO(2) ab mod2019 geschaltet
                       # auf LDAC von DA Wandler AD5791, bei Puls auf 0V werde die Werte 
                       # auf den DA Ausgang uebernommen. Hat pullup auf Leiterplatte, normal als 
                       # Eingang schalten damit sicher keine Uebernahme aus Versehen.
-            OUTPUT,   # reserve, soll nicht floaten,
-            OUTPUT,   # Temperaturregler Leiterplatte compact_2012_vib_heiz, 
+            OUTPUT,   # DIO(3) reserve, soll nicht floaten,
+            OUTPUT,   # DIO(4) Temperaturregler Leiterplatte compact_2012_vib_heiz, 
                       # soll nicht floaten
-            OUTPUT,   # LED rot "Erschuetterung"
-            OUTPUT,   # LED gruen "Benutzer"
-            OUTPUT,   # LED blau "DA activity"
+            OUTPUT,   # DIO(5) LED rot "Erschuetterung"
+            OUTPUT,   # DIO(6) LED gruen "Benutzer"
+            OUTPUT,   # DIO(7) LED blau "DA activity"
         ]
         assert len(lOutput) == 8
         self.ni845xDioSetPortLineDirectionMap(port=PORT, lOutput=lOutput)
