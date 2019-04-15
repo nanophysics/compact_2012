@@ -460,7 +460,7 @@ class ETH_Compact(NI845x):
         self.ni845xSetIoVoltageLevel(self.kNi845x33Volts)
         lOutput=[
             OUTPUT,   # DIO(0) Pin SYNC auf der Leiterplatte compact_2012_da fuer den DA Wandler AD5791
-            OUTPUT,   # DIO(1) reserve, soll nicht floaten
+            OUTPUT,   # DIO(1) chip select of MCP3201
             INPUT,    # DIO(2) ab mod2019 geschaltet
                       # auf LDAC von DA Wandler AD5791, bei Puls auf 0V werde die Werte 
                       # auf den DA Ausgang uebernommen. Hat pullup auf Leiterplatte, normal als 
