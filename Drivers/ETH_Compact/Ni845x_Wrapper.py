@@ -2,8 +2,7 @@ import ctypes, os
 import numpy as np
 import time
 
-from ctypes import (c_int, c_uint8, c_int16, c_uint16, c_int32, c_uint32, 
-                    c_char_p, byref)
+from ctypes import (c_int, c_uint8, c_int16, c_uint16, c_int32, c_uint32, c_char_p, byref)
 
 # match naming conventions in DLL
 int8 = c_int
@@ -61,13 +60,14 @@ if DETECT_MEMORY_LEAK:
             print('psutil not installed', file=f)
 
     def tracemalloc_dump():
+        TRACE_MALLOC_DUMP_COUNT = 10000
         global tracemalloc_count
         tracemalloc_count += 1
 
-        if tracemalloc_count % 1000 != 0:
+        if tracemalloc_count % TRACE_MALLOC_DUMP_COUNT != 0:
             return
 
-        if tracemalloc_count == 1000:
+        if tracemalloc_count == TRACE_MALLOC_DUMP_COUNT:
             tracemalloc.start()
             return
 
@@ -100,20 +100,21 @@ def callFunc(sFunc, *args, **kargs):
     func = getattr(DLL, sFunc)
     func.restype = int32
     # check keyword args
-    bCheckError = kargs['check_error'] if 'check_error' in kargs else True 
+    # bCheckError = kargs['check_error'] if 'check_error' in kargs else True
+    bCheckError = kargs.get('check_error', True)
     # call function, raise error if needed
     status = func(*args)
     if bCheckError:
-        (error, message) = checkError(status)
-        if error:
-            raise Error(message)
+        if status<0:
+            error_string = getStatusToString(status)
+            Error(error_string)
 
 #kNI845XExport void NI845X_FUNC ni845xStatusToString(
 #   int32  StatusCode,
 #   uInt32 MaxSize,
 #   int8 * StatusString
 #   );
-def checkError(status):
+def getStatusToString(status):
     """Convert the error in status to tuple (error=False, message)"""
     # call function to convert status to string
     func = getattr(DLL, 'ni845xStatusToString')
@@ -124,7 +125,7 @@ def checkError(status):
     # convert c str to python string
     message = msgBuffer.value
     message = message.decode('iso-8859-1').strip()
-    return (status<0, message)
+    return message
 
 
 class NI845x():
