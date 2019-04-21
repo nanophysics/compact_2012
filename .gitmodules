@@ -1,6 +1,3 @@
-[submodule "Drivers/ETH_Compact/compat2012_pyserial"]
-	path = Drivers/ETH_Compact/compat2012_pyserial
-	url = https://github.com/tempstabilizer2018group/compat2012_pyserial.git
 [submodule "Drivers/ETH_Compact/compact2012_mpfshell"]
 	path = Drivers/ETH_Compact/compact2012_mpfshell
 	url = https://github.com/tempstabilizer2018group/compact2012_mpfshell.git
