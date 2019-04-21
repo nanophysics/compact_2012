@@ -5,9 +5,16 @@ import re
 import math
 import time
 import binascii
+import platform
 
-sys.path.append('C:/Projekte/ETH-Compact/gpi_mpfshell')
-from mp.mpfexp import MpFileExplorer, MpFileExplorerCaching, RemoteIOError
+str_32bit = platform.architecture()[0]
+if str_32bit != '32bit':
+    raise Exception('Only 32 platform is supported due to a limitation in "pyserial". In Labber set "Run in 32-bit mode"!')
+
+directory = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(directory, 'compact2012_mpfshell'))
+sys.path.insert(0, os.path.join(directory, 'compact2012_pyserial'))
+from mp.mpfexp import MpFileExplorer, RemoteIOError
 
 import compact2012_dac
 from micropython_portable import *
