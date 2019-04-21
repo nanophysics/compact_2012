@@ -30,7 +30,7 @@ if __name__ == '__main__':
     set({
         0: {
           'f_dac_desired_V': 2.0,
-          'f_sweep_VperSecond': 0.001,
+          'f_sweep_VperSecond': 1.0,
         },
         2: {
           'f_dac_desired_V': 10.0,
