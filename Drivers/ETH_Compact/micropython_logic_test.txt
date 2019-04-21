@@ -1,0 +1,28 @@
+
+# Geophone
+__spi_read_geophone()
+
+time_next_geophone_ms
+i_geophone_dac
+i_geophone_threshold_dac
+
+# 10% = 10% * 4096 = 400
+set_geophone_threshold_dac(400)
+
+
+# Blue Activity LED
+communication_activity()
+
+b_communication_detected
+b_led_blue_is_blinking
+
+
+# Green User LED
+set_user_led(True)
+set_user_led(False)
+
+
+# Status
+get_status()
+
+

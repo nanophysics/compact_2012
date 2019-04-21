@@ -1,0 +1,4 @@
+[submodule "Drivers/ETH_Compact/mpfshell"]
+	path = Drivers/ETH_Compact/mpfshell
+	url = https://github.com/tempstabilizer2018group/compact2012_mpfshell.git
+	branch = master
