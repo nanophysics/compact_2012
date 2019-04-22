@@ -32,8 +32,9 @@ compact_40_pin_22	pyboard_X12	(CS(1))
 INITIALIZATION_INTERVAL_MS = 5000
 time_next_initialization_ms = utime.ticks_ms()
 
-GEOPHONE_READ_INTERVAL_MS = 500
-time_next_geophone_ms = utime.ticks_ms()
+# The blinking of the LEDS
+# The geophone will be read every 1/BLINK_FREQUENCY_HZ
+BLINK_FREQUENCY_HZ=2
 
 COMMUNICATION_BLUE_LED_INTERVAL_MS = 2000
 time_next_communication_blue_led_ms = utime.ticks_ms()
@@ -174,8 +175,7 @@ def __spi_read_geophone():
     i_geophone_dac &= 0xFFF
 
 def get_status():
-    i_geophone_age_ms = utime.ticks_ms() - time_next_geophone_ms + GEOPHONE_READ_INTERVAL_MS
-    return b_error, i_geophone_dac, i_geophone_age_ms
+    return b_error, i_geophone_dac
 
 def set_geophone_threshold_dac(i_threshold_dac):
     global i_geophone_threshold_dac
@@ -188,7 +188,7 @@ def set_user_led(on):
 pyboard_init()
 
 micropython.alloc_emergency_exception_buf(100)
-timer_blink = pyb.Timer(4, freq=2)
+timer_blink = pyb.Timer(4, freq=BLINK_FREQUENCY_HZ)
 
 # The LED on the pyboard
 pyb_led_red = pyb.LED(1)
@@ -200,23 +200,20 @@ spi = pyb.SPI(1)
 # 1200000: 650000
 # 2000000: 1300000
 # 1312500: 1312500
-spi.init(pyb.SPI.MASTER, baudrate=1312500, polarity=1, phase=0, crc=None)
+spi.init(pyb.SPI.MASTER, baudrate=1312500, polarity=0, phase=1, crc=None)
 
 __spi_initialize_DAC20()
 __spi_read_geophone()
 
 def blink(__dummy__):
+    # The geophone will be red all 1/BLINK_FREQUENCY_HZ (500ms)
+    __spi_read_geophone()
+
     global time_next_initialization_ms
     i_wait_ms = utime.ticks_diff(time_next_initialization_ms, utime.ticks_ms())
     if i_wait_ms < 0:
         time_next_initialization_ms = utime.ticks_add(utime.ticks_ms(), INITIALIZATION_INTERVAL_MS)
         __spi_initialize_DAC20()
-
-    global time_next_geophone_ms
-    i_wait_ms = utime.ticks_diff(time_next_geophone_ms, utime.ticks_ms())
-    if i_wait_ms < 0:
-        time_next_geophone_ms = utime.ticks_add(utime.ticks_ms(), GEOPHONE_READ_INTERVAL_MS)
-        __spi_read_geophone()
 
     global b_led_blue_is_blinking
     i_wait_ms = utime.ticks_diff(time_next_communication_blue_led_ms, utime.ticks_ms())

@@ -1,3 +1,4 @@
+import time
 import compact2012_driver
 
 def set(dict_requested_values):
@@ -6,12 +7,17 @@ def set(dict_requested_values):
         print('dict_changed_values: {}'.format(dict_changed_values))
         print('geophone_voltage:                                    {:3f} mV'.format(1000.0*driver.x()))
         if b_done:
+            print('done')
             break
 
 if __name__ == '__main__':
     driver = compact2012_driver.Compact2012('COM7')
-    driver.sync_set_geophone_led_threshold_percent(10.0)
-    driver.sync_status_get()
+    driver.sync_set_geophone_led_threshold_percent_FS(10.0)
+
+    while True:
+        driver.sync_status_get()
+        driver.debug_geophone_print()
+        time.sleep(0.4)
 
     set({
         0: {

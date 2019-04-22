@@ -38,8 +38,8 @@ from micropython_portable import *
 
     Separation of logic
         pyboard
-            every 100ms: polls for the geophone
-            every 100ms: initializes DAC20. But only if no traffic detected
+            every x ms: polls for the geophone
+            every x ms: initializes DAC20. But only if no traffic detected
             flashes the red geophone led if movement detected
             flashed the blue communication led if traffic detected
             keeps track of status:
@@ -54,7 +54,7 @@ from micropython_portable import *
                     pyboard_status
         pc-driver
             cache all 10 f_dac_v
-            cache all 10 i_dac_set_time_ms
+            cache f_last_dac_set_s (the time the DACs where set the last time)
             cache pyboard_status
 
 '''
@@ -64,7 +64,6 @@ GEOPHONE_VOLTAGE_TO_PARTICLEVELOCITY_FACTOR=19.7
 # gainINA103 = 1000, dividerR49R51 = 0.33,  VrefMCP3201 = 3.3 therefore VrefMCP3201/gainINA103/dividerR49R51 = 0.01
 F_GEOPHONE_VOLTAGE_FACTOR=0.01/4096.0
 GEOPHONE_MAX_AGE_S=1.0
-LED_VIBRATION_THRESHOLD_100PERCENT_V=0.001
 
 SAVE_VALUES_TO_DISK_TIME_S=1.0
 
@@ -215,30 +214,24 @@ class Compact2012:
         '''
         str_status = self.fe.eval('get_status()')
         list_pyboard_status = eval(str_status)
-        assert len(list_pyboard_status) == 3
+        assert len(list_pyboard_status) == 2
         self.b_pyboard_error = list_pyboard_status[0]
         self.i_pyboard_geophone_dac = list_pyboard_status[1]
-        self.f_pyboard_geophone_read_s = time.time() - list_pyboard_status[2]/1000.0
+        self.f_pyboard_geophone_read_s = time.time()
 
     def sync_set_user_led(self, on):
         assert isinstance(on, bool)
         self.fe.eval('set_user_led({})'.format(on))
 
-    def sync_set_geophone_led_threshold_percent(self, threshold_percent):
-        assert isinstance(threshold_percent, float)
-        assert 0.0 <= threshold_percent <= 100.0
-        threshold_dac = threshold_percent/F_GEOPHONE_VOLTAGE_FACTOR*LED_VIBRATION_THRESHOLD_100PERCENT_V/100.0
+    def sync_set_geophone_led_threshold_percent_FS(self, threshold_percent_FS):
+        assert isinstance(threshold_percent_FS, float)
+        assert 0.0 <= threshold_percent_FS <= 100.0
+        threshold_dac = threshold_percent_FS*4096.0//100.0
         assert 0.0 <= threshold_dac <= 4096
         self.fe.eval('set_geophone_threshold_dac({})'.format(threshold_dac))
 
-
-        # self.led_red_vibration_on = self.geophone_voltage/LED_VIBRATION_THRESHOLD_100PERCENT_V  > self.led_vibration_threshold_percent/100.0
-        # self.led_red_vibration_on = self.i_pyboard_geophone_dac*F_GEOPHONE_VOLTAGE_FACTOR/LED_VIBRATION_THRESHOLD_100PERCENT_V  > self.led_vibration_threshold_percent/100.0
-        # # Convert
-        # self.led_red_vibration_on = self.i_pyboard_geophone_dac > self.led_vibration_threshold_percent/F_GEOPHONE_VOLTAGE_FACTOR*LED_VIBRATION_THRESHOLD_100PERCENT_V/100.0
-
-    def x(self):
-        return self.__read_geophone_voltage()
+    def debug_geophone_print(self):
+        print('geophone:                      dac={:016b}={:04d} [0..4095], voltage={:06f}mV, percent={:04.01f}'.format(self.i_pyboard_geophone_dac, self.i_pyboard_geophone_dac, self.__read_geophone_voltage(), self.get_geophone_percent_FS()))
 
     def __sync_get_geophone(self):
         f_geophone_age_s = time.time() - self.f_pyboard_geophone_read_s
@@ -248,11 +241,11 @@ class Compact2012:
 
     def __read_geophone_voltage(self):
         self.__sync_get_geophone()
-        return self.i_pyboard_geophone_dac * F_GEOPHONE_VOLTAGE_FACTOR
+        return self.i_pyboard_geophone_dac*F_GEOPHONE_VOLTAGE_FACTOR
 
-    def get_geophone_percent(self):
-        f_percent = self.__read_geophone_voltage()/LED_VIBRATION_THRESHOLD_100PERCENT_V*100.0
-        return max(0.0, min(100.0, f_percent))
+    def get_geophone_percent_FS(self):
+        f_percent_FS = self.i_pyboard_geophone_dac/4096.0*100.0
+        return f_percent_FS
 
     def get_geophone_particle_velocity(self):
         return self.__read_geophone_voltage()/GEOPHONE_VOLTAGE_TO_PARTICLEVELOCITY_FACTOR

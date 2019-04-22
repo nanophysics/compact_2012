@@ -65,9 +65,9 @@ class Driver(InstrumentDriver.InstrumentWorker):
             quant.setValue(value)
             self.readValueFromOther('DA%d-voltage' % (indx0+1))
         # if final call and voltages have been changed, send them at once
-        elif quant.name == 'Geophone red LED threshold':
+        elif quant.name == 'red LED threshold percent FS':
             value = max(0.0, min(100.0, value))
-            self.compact2012.sync_set_geophone_led_threshold_percent(value)
+            self.compact2012.sync_set_geophone_led_threshold_percent_FS(value)
         if self.isFinalCall(options) and len(self.dict_requested_values)>0:
             self.sync_DACs()
         return value
@@ -95,11 +95,11 @@ class Driver(InstrumentDriver.InstrumentWorker):
     def performGetValue(self, quant, options={}):
         """Perform the Get Value instrument operation"""
         # only implmeneted for geophone voltage
-        if quant.name == 'Geophone percent':
-            value = self.compact2012.get_geophone_percent()
-        elif quant.name == 'Geophone particle velocity':
+        if quant.name == 'percent FS':
+            value = self.compact2012.get_geophone_percent_FS()
+        elif quant.name == 'particle velocity':
             value = self.compact2012.get_geophone_particle_velocity()
-        elif quant.name == 'Geophone red LED threshold':
+        elif quant.name == 'red LED threshold percent FS':
             value = quant.getValue()
         elif quant.name.endswith('-voltage'):
             # get index of channel to get
