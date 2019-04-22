@@ -75,13 +75,14 @@ class Dac:
         self.index = index
         self.f_value_V = 0.0
 
-
 class Compact2012:
     def __init__(self, str_port):
         if re.match(r'^COM\d+$', str_port) is None:
             raise Exception('Expected a string like "COM5", but got "{}"'.format(str_port))
         str_port2 = 'ser:' + str_port
 
+        self.f_write_file_time_s = 0.0
+        self.str_filename_values = os.path.join(directory, 'Values-{}.txt'.format(str_port))
         self.list_dacs = list(map(lambda i: Dac(i), range(DACS_COUNT)))
 
         # The time when the dac was set last.
@@ -94,7 +95,55 @@ class Compact2012:
 
         self.fe = MpFileExplorer(str_port2, reset=True)
         self.__sync_init()
-    
+        self.load_values_from_file()
+
+    def close(self):
+        self.save_values_to_file()
+        self.fe.close()
+
+    def load_values_from_file(self):
+        '''
+            Load ADC-Values from disk
+        '''
+        if not os.path.exists(self.str_filename_values):
+            print('"{}": No Compact settings found. Initialize to 0.'.format(self.str_filename_values))
+            # keep track of values (10 voltages)
+            return
+
+        # open and convert to numbers
+        with open(self.str_filename_values, 'r') as f:
+            s = f.read()
+        
+        str_error = '"{}": Compact settings expected 10 integer values got "{}". Initialize to 0.'.format(self.str_filename_values, s)
+        # s: 8.936,4.0,3.56,0.0,0.0,0.0,0.0,0.0,0.0,0.0
+        list_values = s.split(',')
+        if len(list_values) != DACS_COUNT:
+            print(str_error)
+            return
+        try:
+            list_values = map(float, list_values)
+        except ValueError:
+            print(str_error)
+            return
+        for i, f_value_V in enumerate(list_values):
+            self.list_dacs[i].f_value_V = f_value_V
+
+    def save_values_to_file(self, b_force=False):
+        '''
+            Save current values to disk
+            Only save once per SAVE_VALUES_TO_DISK_TIME_S for better performance.
+        '''
+        if not b_force:
+            if time.time() < self.f_write_file_time_s:
+                return
+        self.f_write_file_time_s = time.time() + SAVE_VALUES_TO_DISK_TIME_S
+        def f(obj_Dac):
+            return '{:0.4f}'.format(obj_Dac.f_value_V)
+        list_values = map(f, self.list_dacs)
+        s = ','.join(list_values)
+        with open(self.str_filename_values, 'w') as f:
+            f.write(s)
+
     def __sync_init(self):
         for filename in ('micropython_portable.py', 'micropython_logic.py'):
             filenameFull = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
@@ -104,9 +153,6 @@ class Compact2012:
 
     def __time_since_last_dac_set_s(self):
         return time.monotonic() - self.f_last_dac_set_s
-
-    def close(self):
-        self.fe.close()
 
     def get_dac(self, index):
         '''
@@ -207,6 +253,9 @@ class Compact2012:
         str_dac28 = compact_2012_dac.getDAC28HexStringFromValues(f_values_plus_min_v)
         s_py_command = 'set_dac("{}")'.format(str_dac28)
         pyboard_status = self.fe.eval(s_py_command)
+
+        self.save_values_to_file()
+
         return pyboard_status
 
     def sync_status_get(self):
