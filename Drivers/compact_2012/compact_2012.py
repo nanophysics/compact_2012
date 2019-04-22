@@ -8,7 +8,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
     """ This class implements the Acqiris card driver"""
 
     # ranges and scaling
-    dRange = {'+/- 10 V, change by hand': 1.0,
+    dGain = {'+/- 10 V, change by hand': 1.0,
               '+/- 5 V, change by hand': 0.5,
               '+/- 2 V, change by hand': 0.2,
               '+/- 1 V, change by hand': 0.1,
@@ -40,8 +40,9 @@ class Driver(InstrumentDriver.InstrumentWorker):
         if self.isFirstCall(options):
             self.dict_requested_values = {}
                 # 0: {
-                #     'f_dac_desired_V': 2.5,
-                #     'f_sweep_VperSecond': 5.0,
+                #     'f_DA_OUT_desired_V': 2.5,
+                #     'f_DA_OUT_sweep_VperSecond': 5.0,
+                #     'f_gain': 0.1
                 # },
         if quant.name == 'Green LED':
             # set user LED
@@ -52,9 +53,12 @@ class Driver(InstrumentDriver.InstrumentWorker):
             # Parse quant.name="DA3-voltage" -> 3 -> 2
             indx0 = int(quant.name.strip().split('-')[0][2:]) - 1
             # don't set, just add to dict with values to be set (value, rate)
+            str_gain = self.getValue('DA%d-jumper setting' % (indx0+1))
+            f_gain = self.dGain[str_gain]
             self.dict_requested_values[indx0] = {
-                'f_dac_desired_V': value,
-                'f_sweep_VperSecond': sweepRate,
+                'f_DA_OUT_desired_V': value,
+                'f_DA_OUT_sweep_VperSecond': sweepRate,
+                'f_gain': f_gain,
             }
         elif quant.name.endswith('-jumper setting'):
             # get index of channel to set
@@ -80,7 +84,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
             for indx0, value in dict_changed_values.items():
                 # update the quantity to keep driver up-to-date
                 # return the sweep-rate. If not defined - which should never happen, return 0.001
-                sweepRate = self.dict_requested_values.get(indx0, {'f_sweep_VperSecond': 0.001}).get('f_sweep_VperSecond', 0.001)
+                sweepRate = self.dict_requested_values.get(indx0, {'f_DA_OUT_sweep_VperSecond': 0.001}).get('f_DA_OUT_sweep_VperSecond', 0.001)
                 self.setValue('DA%d-voltage' % (indx0+1), value, sweepRate=sweepRate)
             if b_done:
                 break
@@ -107,8 +111,8 @@ class Driver(InstrumentDriver.InstrumentWorker):
             # Parse quant.name="DA3-voltage" -> 3 -> 2
             indx0 = int(quant.name.strip().split('-')[0][2:]) - 1
             # get value from driver, then return scaled value
-            sRange = self.getValue('DA%d-jumper setting' % (indx0+1))
-            scale = self.dRange[sRange]
+            str_gain = self.getValue('DA%d-jumper setting' % (indx0+1))
+            scale = self.dGain[str_gain]
             value = scale * self.compact2012.get_dac(indx0)
         else:
             # just return the quantity value

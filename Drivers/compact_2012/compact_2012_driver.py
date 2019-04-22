@@ -95,7 +95,8 @@ class Compact2012:
 
         self.fe = MpFileExplorer(str_port2, reset=True)
         self.__sync_init()
-        self.load_values_from_file()
+        # Is this still needed?
+        # self.load_values_from_file()
 
     def close(self):
         self.save_values_to_file()
@@ -174,39 +175,43 @@ class Compact2012:
         for index, d in dict_requested_values.items():
             assert 0 <= index <= DACS_COUNT
             obj_Dac = self.list_dacs[index]
-            f_dac_desired_V = d['f_dac_desired_V']
-            f_sweep_VperSecond = d.get('f_sweep_VperSecond', 0.0)
+            f_DA_OUT_desired_V = d['f_DA_OUT_desired_V']
+            f_gain = d.get('f_gain', 1.0)
+            f_DA_OUT_sweep_VperSecond = d.get('f_DA_OUT_sweep_VperSecond', 0.0)
 
-            def set_value(f_value_v):
+            def get_actual_DA_OUT_V():
+                return obj_Dac.f_value_V*f_gain
+
+            def set_new_DA_OUT_V(f_value_v):
                 # Will set the value and update the dict
-                obj_Dac.f_value_V = f_value_v
+                obj_Dac.f_value_V = f_value_v/f_gain
                 dict_changed_values[index] = f_value_v
 
-            if math.isclose(0.0, f_sweep_VperSecond):
+            if math.isclose(0.0, f_DA_OUT_sweep_VperSecond):
                 # No sweeping
-                if not math.isclose(f_dac_desired_V, obj_Dac.f_value_V):
-                    set_value(f_dac_desired_V)
+                if not math.isclose(f_DA_OUT_desired_V, get_actual_DA_OUT_V()):
+                    set_new_DA_OUT_V(f_DA_OUT_desired_V)
                 continue
 
             # Sweeping requested
-            assert f_sweep_VperSecond >= 0.0
-            f_desired_step_V = f_dac_desired_V - obj_Dac.f_value_V
+            assert f_DA_OUT_sweep_VperSecond >= 0.0
+            f_desired_step_V = f_DA_OUT_desired_V - get_actual_DA_OUT_V()
             if math.isclose(0.0, f_desired_step_V):
                 # We are on the requested voltage. Nothing to do
                 continue
 
             # We need to sweep
             b_need_wait_before_DAC_set = True
-            f_possible_step = F_SWEEPINTERVAL_S*f_sweep_VperSecond
+            f_possible_step = F_SWEEPINTERVAL_S*f_DA_OUT_sweep_VperSecond
             if abs(f_desired_step_V) < f_possible_step:
                 # We can set the final voltage
-                set_value(f_dac_desired_V)
+                set_new_DA_OUT_V(f_DA_OUT_desired_V)
                 continue
 
             # The sweep rate is limiting
             b_done = False
             f_step_V = math.copysign(f_possible_step, f_desired_step_V)
-            set_value(obj_Dac.f_value_V + f_step_V)
+            set_new_DA_OUT_V(get_actual_DA_OUT_V() + f_step_V)
 
         return b_done, b_need_wait_before_DAC_set, dict_changed_values
 
@@ -215,18 +220,19 @@ class Compact2012:
             dict_requested_values = {
                 0: # Optional. The DAC [0..9]
                     {
-                        'f_dac_desired_V': 5.5, # The value to set
-                        'f_sweep_VperSecond': 0.1, # Optional
+                        'f_DA_OUT_desired_V': 5.5, # The value to set
+                        'f_DA_OUT_sweep_VperSecond': 0.1, # Optional
+                        'f_gain': 0.5, # Optional. f_DA_OUT_desired_V=f_dac_desired_V*f_gain
                     }
             }
 
             return: b_done, {
-                0: 5.1, # Actual value
+                0: 5.1, # Actual value DA_OUT
             }
 
             This method will receive try to set the values of the dacs.
             If the call is following very shortly after the last call, it may delay before setting the DACs.
-            If required, f_sweep_VperSecond will be used for small voltage increments.
+            If required, f_DA_OUT_sweep_VperSecond will be used for small voltage increments.
             The effective set values will be returned. To be used for updateing the display and the log output.
             If b_done == False, the labber driver muss call this method again with the same parameters.
         '''
@@ -235,7 +241,7 @@ class Compact2012:
         if b_need_wait_before_DAC_set:
             # We have to make sure, that the last call was not closer than F_SWEEPINTERVAL_S
             time_to_sleep_s = F_SWEEPINTERVAL_S - self.__time_since_last_dac_set_s()
-            if time_to_sleep_s > 0.005:
+            if time_to_sleep_s > 0.005: # It doesn't make sense for the operarting system to stop for less than 5ms
                 assert time_to_sleep_s <= F_SWEEPINTERVAL_S
                 time.sleep(time_to_sleep_s)
         
@@ -252,22 +258,24 @@ class Compact2012:
         f_values_plus_min_v = list(map(lambda obj_Dac: obj_Dac.f_value_V, self.list_dacs))
         str_dac28 = compact_2012_dac.getDAC28HexStringFromValues(f_values_plus_min_v)
         s_py_command = 'set_dac("{}")'.format(str_dac28)
-        pyboard_status = self.fe.eval(s_py_command)
+        str_status = self.fe.eval(s_py_command)
+        self.__update_status_return(str_status)
 
         self.save_values_to_file()
 
-        return pyboard_status
+    def __update_status_return(self, str_status):
+        list_pyboard_status = eval(str_status)
+        assert len(list_pyboard_status) == 2
+        self.b_pyboard_error = list_pyboard_status[0]
+        self.i_pyboard_geophone_dac = list_pyboard_status[1]
+        self.f_pyboard_geophone_read_s = time.time()
 
     def sync_status_get(self):
         '''
             Poll for the pyboard_status
         '''
         str_status = self.fe.eval('get_status()')
-        list_pyboard_status = eval(str_status)
-        assert len(list_pyboard_status) == 2
-        self.b_pyboard_error = list_pyboard_status[0]
-        self.i_pyboard_geophone_dac = list_pyboard_status[1]
-        self.f_pyboard_geophone_read_s = time.time()
+        self.__update_status_return(str_status)
 
     def sync_set_user_led(self, on):
         assert isinstance(on, bool)

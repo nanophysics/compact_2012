@@ -14,7 +14,7 @@ if __name__ == '__main__':
     driver = compact_2012_driver.Compact2012('COM7')
     driver.sync_set_geophone_led_threshold_percent_FS(10.0)
 
-    if False:
+    if True:
         while True:
             driver.sync_status_get()
             driver.debug_geophone_print()
@@ -22,25 +22,28 @@ if __name__ == '__main__':
 
     set({
         0: {
-          'f_dac_desired_V': 2.5,
-          'f_sweep_VperSecond': 5.0,
+          'f_DA_OUT_desired_V': 2.5,
+          'f_DA_OUT_sweep_VperSecond': 5.0,
         },
         1: {
-          'f_dac_desired_V': 1.5,
-          'f_sweep_VperSecond': 5.0,
+          'f_DA_OUT_desired_V': 1.5,
+          'f_DA_OUT_sweep_VperSecond': 5.0,
+          'f_gain': 0.5,
         },
         2: {
-          'f_dac_desired_V': 5.0,
+          'f_DA_OUT_desired_V': 5.0,
+          'f_gain': 0.2,
         },
     })
 
     set({
         0: {
-          'f_dac_desired_V': 2.0,
-          'f_sweep_VperSecond': 1.0,
+          'f_DA_OUT_desired_V': 2.0,
+          'f_DA_OUT_sweep_VperSecond': 1.0,
         },
         2: {
-          'f_dac_desired_V': 10.0,
+          'f_DA_OUT_desired_V': 10.0,
+          'f_gain': 0.2,
         },
     })
     
