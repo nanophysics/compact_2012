@@ -12,11 +12,11 @@ if str_32bit != '32bit':
     raise Exception('Only 32 platform is supported due to a limitation in "pyserial". In Labber set "Run in 32-bit mode"!')
 
 directory = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(directory, 'compact2012_mpfshell'))
-sys.path.insert(0, os.path.join(directory, 'compact2012_pyserial'))
+sys.path.insert(0, os.path.join(directory, 'compact_2012_mpfshell'))
+sys.path.insert(0, os.path.join(directory, 'compact_2012_pyserial'))
 from mp.mpfexp import MpFileExplorer, RemoteIOError
 
-import compact2012_dac
+import compact_2012_dac
 from micropython_portable import *
 
 '''
@@ -204,7 +204,7 @@ class Compact2012:
             Return pyboard_status.
         '''
         f_values_plus_min_v = list(map(lambda obj_Dac: obj_Dac.f_value_V, self.list_dacs))
-        str_dac28 = compact2012_dac.getDAC28HexStringFromValues(f_values_plus_min_v)
+        str_dac28 = compact_2012_dac.getDAC28HexStringFromValues(f_values_plus_min_v)
         s_py_command = 'set_dac("{}")'.format(str_dac28)
         pyboard_status = self.fe.eval(s_py_command)
         return pyboard_status

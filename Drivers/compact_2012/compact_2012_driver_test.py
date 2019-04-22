@@ -1,5 +1,5 @@
 import time
-import compact2012_driver
+import compact_2012_driver
 
 def set(dict_requested_values):
     while True:
@@ -11,7 +11,7 @@ def set(dict_requested_values):
             break
 
 if __name__ == '__main__':
-    driver = compact2012_driver.Compact2012('COM7')
+    driver = compact_2012_driver.Compact2012('COM7')
     driver.sync_set_geophone_led_threshold_percent_FS(10.0)
 
     if False:
