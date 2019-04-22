@@ -28,6 +28,16 @@ compact_40_pin_16	pyboard_X11	(CS(0))
 compact_40_pin_22	pyboard_X12	(CS(1))
 '''
 
+# 600000: 300000
+# 1200000: 650000
+# 2000000: 1300000
+# 1312500: 1312500
+SPI_BAUDRATE=1312500
+SPI_GEOPHONE_POLARITY=0
+SPI_GEOPHONE_PHASE=1
+SPI_DAC20_DAC8_POLARITY=1
+SPI_DAC20_DAC8_PHASE=0
+
 # Initialize DAC20 every x seconds
 INITIALIZATION_INTERVAL_MS = 5000
 time_next_initialization_ms = utime.ticks_ms()
@@ -159,6 +169,7 @@ def __spi_write_DAC8():
 
 def __spi_read_geophone():
     # http://ww1.microchip.com/downloads/en/devicedoc/21290d.pdf
+    spi.init(pyb.SPI.MASTER, baudrate=1312500, polarity=SPI_GEOPHONE_POLARITY, phase=SPI_GEOPHONE_PHASE, crc=None)
     p_CHIPSELECT_GEO_MCP3201_out.value(0)
 
     # ask for two bytes by first sending two bytes
@@ -166,6 +177,7 @@ def __spi_read_geophone():
     read_geophone = bytearray(2)
     spi.send_recv(read_geophone, read_geophone, timeout=100)
     p_CHIPSELECT_GEO_MCP3201_out.value(1)
+    spi.init(pyb.SPI.MASTER, baudrate=1312500, polarity=SPI_DAC20_DAC8_POLARITY, phase=SPI_DAC20_DAC8_PHASE, crc=None)
 
     global i_geophone_dac
     i_geophone_dac = read_geophone[1] + 256*read_geophone[0]
@@ -196,11 +208,7 @@ pyb_led_red.on()
 
 spi = pyb.SPI(1)
 
-# 600000: 300000
-# 1200000: 650000
-# 2000000: 1300000
-# 1312500: 1312500
-spi.init(pyb.SPI.MASTER, baudrate=1312500, polarity=0, phase=1, crc=None)
+spi.init(pyb.SPI.MASTER, baudrate=1312500, polarity=SPI_DAC20_DAC8_POLARITY, phase=SPI_DAC20_DAC8_PHASE, crc=None)
 
 __spi_initialize_DAC20()
 __spi_read_geophone()

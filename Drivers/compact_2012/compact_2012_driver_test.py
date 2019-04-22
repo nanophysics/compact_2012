@@ -5,7 +5,7 @@ def set(dict_requested_values):
     while True:
         b_done, dict_changed_values = driver.sync_dac_set_all(dict_requested_values)
         print('dict_changed_values: {}'.format(dict_changed_values))
-        print('geophone_percent_FS:                                    {:3f} mV'.format(1000.0*driver.get_geophone_percent_FS()))
+        print('geophone_percent_FS:                                    {:3.1f}%'.format(driver.get_geophone_percent_FS()))
         if b_done:
             print('done')
             break
