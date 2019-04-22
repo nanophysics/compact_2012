@@ -5,7 +5,7 @@ def set(dict_requested_values):
     while True:
         b_done, dict_changed_values = driver.sync_dac_set_all(dict_requested_values)
         print('dict_changed_values: {}'.format(dict_changed_values))
-        print('geophone_voltage:                                    {:3f} mV'.format(1000.0*driver.x()))
+        print('geophone_percent_FS:                                    {:3f} mV'.format(1000.0*driver.get_geophone_percent_FS()))
         if b_done:
             print('done')
             break
@@ -14,10 +14,11 @@ if __name__ == '__main__':
     driver = compact2012_driver.Compact2012('COM7')
     driver.sync_set_geophone_led_threshold_percent_FS(10.0)
 
-    while True:
-        driver.sync_status_get()
-        driver.debug_geophone_print()
-        time.sleep(0.4)
+    if False:
+        while True:
+            driver.sync_status_get()
+            driver.debug_geophone_print()
+            time.sleep(0.4)
 
     set({
         0: {

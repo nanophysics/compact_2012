@@ -138,7 +138,8 @@ class Compact2012:
 
             if math.isclose(0.0, f_sweep_VperSecond):
                 # No sweeping
-                set_value(f_dac_desired_V)
+                if not math.isclose(f_dac_desired_V, obj_Dac.f_value_V):
+                    set_value(f_dac_desired_V)
                 continue
 
             # Sweeping requested
