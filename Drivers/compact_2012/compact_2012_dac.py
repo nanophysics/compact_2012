@@ -4,83 +4,82 @@
 
 from micropython_portable import *
 
-def continuity_lookup(dac28_value):
+
+def getDAC30FromValue(value_plus_min_v):
+    # scale to [0..DAC30_MAX-1]
+    dac30_value = DAC30_MAX*(value_plus_min_v+VALUE_PLUS_MIN_MAX_V)/VALUE_PLUS_MIN_MAX_V/2.0
+    dac30_value = int(dac30_value)
+    # clip to [0..DAC30_MAX-1]
+    dac30_value_clipped = min(max(dac30_value, 0), DAC30_MAX-1)
+    return dac30_value_clipped
+
+def getDAC20DAC12IntFromValue(value_plus_min_v):
     '''
-      Allow future extension: Lookup table for continuity
+        Convert the desired voltage into a integer from [0..DAC30_MAX-1].
 
-      The DAC8 will have a gain for 2 digits of the DAC20.
-      This will allow to use DAC8 to drive a continuity offset.
-      This method will:
-      Take the last significant 8 bits and device it by 2.
+        >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(-10.0)))
+        ['0x00000', '0x00000']
+        >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(0.0)))
+        ['0x80000', '0x00000']
+        >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(18.0e-6)))
+        ['0x80000', '0x000F1']
+        >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(5.0)))
+        ['0xC0000', '0x00000']
+        >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(10.0)))
+        ['0xFFFFF', '0x003FF']
+        >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(15.0)))
+        ['0xFFFFF', '0x003FF']
     '''
-    dac28_value_lookup = dac28_value
-    last_8_bits = dac28_value % 0x100
-    dac28_value_lookup -= last_8_bits
-    last_8_bits = last_8_bits//2
-    dac28_value_lookup += last_8_bits
-    assert dac28_value - dac28_value_lookup < 0x100
-    return dac28_value_lookup
+    dac30_value = getDAC30FromValue(value_plus_min_v)
+    dac20_value = dac30_value >> 10
+    dac12_value = (dac30_value & 0x0FFF) >> 2
+    return dac20_value, dac12_value
 
-def getDAC28FromValue(value_plus_min_v):
-    # scale to [0..DAC28_MAX-1]
-    dac28_value = DAC28_MAX*(value_plus_min_v+VALUE_PLUS_MIN_MAX_V)/VALUE_PLUS_MIN_MAX_V/2.0
-    dac28_value = int(dac28_value)
-    # clip to [0..DAC28_MAX-1]
-    dac28_value_clipped = min(max(dac28_value, 0), DAC28_MAX-1)
-    # Allow future extension: Lookup table for continuity
-    dac28_value_lookup = continuity_lookup(dac28_value_clipped)
-    return dac28_value_lookup
-
-def getDAC28HexStringFromValue(value_plus_min_v):
+def getDAC20DAC12HexStringFromValues(f_values_plus_min_v):
     '''
-        Convert the desired voltage into a integer from [0..DAC28_MAX-1].
+        Convert the desired voltage into a integer from [0..DAC30_MAX-1].
 
-        >>> getDAC28HexStringFromValue(-10.0)
-        '0000000'
-        >>> getDAC28HexStringFromValue(0.0)
-        '8000000'
-        >>> getDAC28HexStringFromValue(18.0e-6)
-        '8000078'
-        >>> getDAC28HexStringFromValue(5.0)
-        'C000000'
-        >>> getDAC28HexStringFromValue(10.0)
-        'FFFFF7F'
-        >>> getDAC28HexStringFromValue(15.0)
-        'FFFFF7F'
-    '''
-    dac28_value = getDAC28FromValue(value_plus_min_v)
-    return DAC28_FORMAT_HEX.format(dac28_value)
-
-def getDAC28HexStringFromValues(f_values_plus_min_v):
-    '''
-        Convert the desired voltage into a integer from [0..DAC28_MAX-1].
-
-        >>> str_dac28 = getDAC28HexStringFromValues((-10.0, -5.0, -2.0, -1.0, 0.0, 1.0, 2.0, 5.0, 10.0, 15.0))
-        >>> str_dac28
-        '000000040000006666633733331980000008CCCC66999994CC000000FFFFF7FFFFFF7F'
-        >>> assert len(str_dac28) == DACS_COUNT*DAC28_NIBBLES
+        >>> str_dac20, str_dac12 = getDAC20DAC12HexStringFromValues((-10.0, -5.0, -2.0, -1.0, 0.0, 1.0, 2.0, 5.0, 10.0, 15.0))
+        >>> str_dac20
+        '00000400006666673333800008CCCC99999C0000FFFFFFFFFF'
+        >>> str_dac12
+        '0000002663330000CC1990003FF3FF'
+        >>> assert len(str_dac20) == DACS_COUNT*DAC20_NIBBLES
+        >>> assert len(str_dac12) == DACS_COUNT*DAC12_NIBBLES
         >>> clear_dac_nibbles()
-        >>> set_dac_nibbles(str_dac28)
+        >>> set_dac20_nibbles(str_dac20)
         >>> dac20_nibbles
         bytearray(b'1FFFFF1FFFFF1C000019999918CCCC180000173333166666140000100000')
-        >>> binascii.hexlify(dac8_bytes)
-        b'07F03307F03300003304C033066033000033019033033033000033000033'
+        >>> set_dac12_nibbles(str_dac12)
+        >>> dac12_nibbles
+        bytearray(b'03FF3303FF3300003301993300CC33000033033333026633000033000033')
 
-        >>> dac8_bytes_value1to9, dac8_bytes_value10 = splice_dac8()
-        >>> len(dac8_bytes_value1to9)
+        >>> dac12_bytes_value1to9, dac12_bytes_value10 = splice_dac12(dac12_nibbles)
+        >>> len(dac12_bytes_value1to9)
         27
-        >>> len(dac8_bytes_value10)
+        >>> len(dac12_bytes_value10)
         3
-        >>> binascii.hexlify(dac8_bytes_value1to9)
-        b'07f03307f03300003304c033066033000033019033033033000033'
-        >>> binascii.hexlify(dac8_bytes_value10)
+        >>> binascii.hexlify(dac12_bytes_value1to9)
+        b'03ff3303ff3300003301993300cc33000033033333026633000033'
+        >>> binascii.hexlify(dac12_bytes_value10)
         b'000033'
     '''
     assert len(f_values_plus_min_v) == DACS_COUNT
 
-    str_dac28 = ''.join(map(getDAC28HexStringFromValue, f_values_plus_min_v))
+    list_i_dac20  = []
+    list_i_dac12 = []
+    for f_value_plus_min_v in f_values_plus_min_v:
+        dac20_value, dac12_value = getDAC20DAC12IntFromValue(f_value_plus_min_v)
+        list_i_dac20.append(dac20_value)
+        list_i_dac12.append(dac12_value)
 
-    return str_dac28
+    str_dac20 = ''.join(map(DAC20_FORMAT_HEX.format, list_i_dac20))
+    str_dac12 = ''.join(map(DAC12_FORMAT_HEX.format, list_i_dac12))
+
+    assert len(str_dac20) == DACS_COUNT * DAC20_NIBBLES
+    assert len(str_dac12) == DACS_COUNT * DAC12_NIBBLES
+
+    return str_dac20, str_dac12
 
 if __name__ == '__main__':
     import doctest

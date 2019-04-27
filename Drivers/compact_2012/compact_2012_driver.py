@@ -51,9 +51,9 @@ from micropython_portable import *
                     i_geophone_dac
                     i_geophone_age_ms
                 This status may be retreived from the pyboard using get_status()
-            update of DAC20/DAC8:
-                set_dac():
-                    sets both DAC20 and DAC8
+            update of DAC20/DAC12:
+                set_dac(str_dac20, str_dac12):
+                    sets both DAC20 and DAC12
                     pyboard_status
         pc-driver
             cache all 10 f_dac_v
@@ -297,8 +297,8 @@ class Compact2012:
             Return pyboard_status.
         '''
         f_values_plus_min_v = list(map(lambda obj_Dac: obj_Dac.f_value_V, self.list_dacs))
-        str_dac28 = compact_2012_dac.getDAC28HexStringFromValues(f_values_plus_min_v)
-        s_py_command = 'set_dac("{}")'.format(str_dac28)
+        str_dac20, str_dac12 = compact_2012_dac.getDAC20DAC12HexStringFromValues(f_values_plus_min_v)
+        s_py_command = 'set_dac("{}", "{}")'.format(str_dac20, str_dac12)
         self.obj_time_span_set_dac.start()
         
         str_status = self.fe.eval(s_py_command)
