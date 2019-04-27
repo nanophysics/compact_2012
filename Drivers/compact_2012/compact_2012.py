@@ -7,15 +7,6 @@ import compact_2012_driver
 class Driver(InstrumentDriver.InstrumentWorker):
     """ This class implements the Acqiris card driver"""
 
-    # ranges and scaling
-    dGain = {'+/- 10 V, change by hand': 1.0,
-              '+/- 5 V, change by hand': 0.5,
-              '+/- 2 V, change by hand': 0.2,
-              '+/- 1 V, change by hand': 0.1,
-              '+/- 0.5 V, change by hand': 0.05,
-              '+/- 0.2 V, change by hand': 0.02,
-              '+/- 0.1 V, change by hand': 0.01}
-    
     def performOpen(self, options={}):
         """Perform the operation of opening the instrument connection"""
         # init object
@@ -54,7 +45,9 @@ class Driver(InstrumentDriver.InstrumentWorker):
             indx0 = int(quant.name.strip().split('-')[0][2:]) - 1
             # don't set, just add to dict with values to be set (value, rate)
             str_gain = self.getValue('DA%d-jumper setting' % (indx0+1))
-            f_gain = self.dGain[str_gain]
+            f_gain = compact_2012_driver.DICT_GAIN_2_VALUE[str_gain]
+            f_max_range = compact_2012_driver.VALUE_PLUS_MIN_MAX_V*f_gain
+            value = min(f_max_range, max(-f_max_range, value))
             self.dict_requested_values[indx0] = {
                 'f_DA_OUT_desired_V': value,
                 'f_DA_OUT_sweep_VperSecond': sweepRate,
@@ -80,7 +73,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
         """Set multiple values at once, with support for sweeping"""
         while True:
             b_done, dict_changed_values = self.compact2012.sync_dac_set_all(self.dict_requested_values)
-            print('dict_changed_values: {}'.format(dict_changed_values))
+            # print('dict_changed_values: {}'.format(dict_changed_values))
             for indx0, value in dict_changed_values.items():
                 # update the quantity to keep driver up-to-date
                 # return the sweep-rate. If not defined - which should never happen, return 0.001
@@ -112,8 +105,8 @@ class Driver(InstrumentDriver.InstrumentWorker):
             indx0 = int(quant.name.strip().split('-')[0][2:]) - 1
             # get value from driver, then return scaled value
             str_gain = self.getValue('DA%d-jumper setting' % (indx0+1))
-            scale = self.dGain[str_gain]
-            value = scale * self.compact2012.get_dac(indx0)
+            gain = compact_2012_driver.DICT_GAIN_2_VALUE[str_gain]
+            value = gain * self.compact2012.get_dac(indx0)
         else:
             # just return the quantity value
             value = quant.getValue()

@@ -6,22 +6,6 @@ import math
 import time
 import logging
 
-logger = logging.getLogger('compact_2012')
-
-logger.setLevel(logging.DEBUG)
-
-directory = os.path.dirname(os.path.abspath(__file__))
-for subproject in ('compact_2012_mpfshell', 'compact_2012_pyserial'):
-    filename_requirements = os.path.join(directory, subproject, 'requirements.txt')
-    if not os.path.exists(filename_requirements):
-        raise Exception('The file "{}" is missing. You have git-clone the subproject "{}" too!'.format(filename_requirements, subproject))
-    sys.path.insert(0, os.path.join(directory, subproject))
-
-from mp.mpfexp import MpFileExplorer, RemoteIOError
-
-import compact_2012_dac
-from micropython_portable import *
-
 '''
     Naming conventions
         PEP8
@@ -62,13 +46,42 @@ from micropython_portable import *
 
 '''
 
+logger = logging.getLogger('compact_2012')
+
+logger.setLevel(logging.DEBUG)
+
+directory = os.path.dirname(os.path.abspath(__file__))
+for subproject in ('compact_2012_mpfshell', 'compact_2012_pyserial'):
+    filename_requirements = os.path.join(directory, subproject, 'requirements.txt')
+    if not os.path.exists(filename_requirements):
+        raise Exception('The file "{}" is missing. You have git-clone the subproject "{}" too!'.format(filename_requirements, subproject))
+    sys.path.insert(0, os.path.join(directory, subproject))
+
+from mp.mpfexp import MpFileExplorer, RemoteIOError
+
+import compact_2012_dac
+from micropython_portable import *
+
+
+# ranges and scaling
+DICT_GAIN_2_VALUE = {
+    '+/- 10 V, change by hand': 1.0,
+    '+/- 5 V, change by hand': 0.5,
+    '+/- 2 V, change by hand': 0.2,
+    '+/- 1 V, change by hand': 0.1,
+    '+/- 0.5 V, change by hand': 0.05,
+    '+/- 0.2 V, change by hand': 0.02,
+    '+/- 0.1 V, change by hand': 0.01,
+}
+CHANGE_BY_HAND = ', change by hand'
+
 # datasheet RTC-10hz, 395ohm, at 1000 Ohm RL 19.7 V/(m/s)
 GEOPHONE_VOLTAGE_TO_PARTICLEVELOCITY_FACTOR=19.7
 # gainINA103 = 1000, dividerR49R51 = 0.33,  VrefMCP3201 = 3.3 therefore VrefMCP3201/gainINA103/dividerR49R51 = 0.01
 F_GEOPHONE_VOLTAGE_FACTOR=0.01/4096.0
 GEOPHONE_MAX_AGE_S=1.0
 
-SAVE_VALUES_TO_DISK_TIME_S=1.0
+SAVE_VALUES_TO_DISK_TIME_S=5.0
 
 # sweep set interval, in seconds
 F_SWEEPINTERVAL_S = 0.03
@@ -113,6 +126,13 @@ class Dac:
     def __init__(self, index):
         self.index = index
         self.f_value_V = 0.0
+        self.f_gain = 1.0
+
+    def get_gain_string(self):
+        for str_gain, f_gain in DICT_GAIN_2_VALUE.items():
+            if math.isclose(f_gain, self.f_gain):
+                return str_gain.replace(CHANGE_BY_HAND, '')
+        return '??? {:5.1f}'.format(self.f_gain)
 
 class Compact2012:
     def __init__(self, str_port):
@@ -137,39 +157,10 @@ class Compact2012:
 
         self.fe = MpFileExplorer(str_port2, reset=True)
         self.__sync_init()
-        # Is this still needed?
-        # self.load_values_from_file()
 
     def close(self):
         self.save_values_to_file()
         self.fe.close()
-
-    def load_values_from_file(self):
-        '''
-            Load ADC-Values from disk
-        '''
-        if not os.path.exists(self.str_filename_values):
-            print('"{}": No Compact settings found. Initialize to 0.'.format(self.str_filename_values))
-            # keep track of values (10 voltages)
-            return
-
-        # open and convert to numbers
-        with open(self.str_filename_values, 'r') as f:
-            s = f.read()
-        
-        str_error = '"{}": Compact settings expected 10 integer values got "{}". Initialize to 0.'.format(self.str_filename_values, s)
-        # s: 8.936,4.0,3.56,0.0,0.0,0.0,0.0,0.0,0.0,0.0
-        list_values = s.split(',')
-        if len(list_values) != DACS_COUNT:
-            print(str_error)
-            return
-        try:
-            list_values = map(float, list_values)
-        except ValueError:
-            print(str_error)
-            return
-        for i, f_value_V in enumerate(list_values):
-            self.list_dacs[i].f_value_V = f_value_V
 
     def save_values_to_file(self, b_force=False):
         '''
@@ -180,12 +171,17 @@ class Compact2012:
             if time.perf_counter() < self.f_write_file_time_s:
                 return
         self.f_write_file_time_s = time.perf_counter() + SAVE_VALUES_TO_DISK_TIME_S
-        def f(obj_Dac):
-            return '{:0.4f}'.format(obj_Dac.f_value_V)
-        list_values = map(f, self.list_dacs)
-        s = ','.join(list_values)
+
         with open(self.str_filename_values, 'w') as f:
-            f.write(s)
+            str_date_time = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime())
+
+            f.write('{}\n'.format(str_date_time))
+            f.write('''compact_2012
+While measuring with Labber, this file is written every {} seconds. If you delete this file, Labber will write it again.
+You can use this values when Labber crashes and you do not know how to go on.
+Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(SAVE_VALUES_TO_DISK_TIME_S))
+            for obj_Dac in self.list_dacs:
+                f.write('DA{} {:8.8f} V     (range, jumper, {})\n'.format(obj_Dac.index+1, obj_Dac.f_value_V*obj_Dac.f_gain, obj_Dac.get_gain_string()))
 
     def __sync_init(self):
         for filename in ('micropython_portable.py', 'micropython_logic.py'):
@@ -224,6 +220,11 @@ class Compact2012:
             def set_new_DA_OUT_V(f_value_v):
                 # Will set the value and update the dict
                 obj_Dac.f_value_V = f_value_v/f_gain
+                if obj_Dac.f_value_V > VALUE_PLUS_MIN_MAX_V:
+                    obj_Dac.f_value_V = VALUE_PLUS_MIN_MAX_V
+                if obj_Dac.f_value_V < -VALUE_PLUS_MIN_MAX_V:
+                    obj_Dac.f_value_V = -VALUE_PLUS_MIN_MAX_V
+                obj_Dac.f_gain = f_gain
                 dict_changed_values[index] = f_value_v
 
             if math.isclose(0.0, f_DA_OUT_sweep_VperSecond):
