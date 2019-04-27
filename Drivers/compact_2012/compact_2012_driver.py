@@ -152,9 +152,6 @@ class Compact2012:
             self.fe.execfile(filenameFull)
         self.sync_status_get()
 
-    def __time_since_last_dac_set_s(self):
-        return time.monotonic() - self.f_last_dac_set_s
-
     def get_dac(self, index):
         '''
            Returns the current Voltage
@@ -240,12 +237,13 @@ class Compact2012:
 
         if b_need_wait_before_DAC_set:
             # We have to make sure, that the last call was not closer than F_SWEEPINTERVAL_S
-            time_to_sleep_s = F_SWEEPINTERVAL_S - self.__time_since_last_dac_set_s()
-            if time_to_sleep_s > 0.005: # It doesn't make sense for the operarting system to stop for less than 5ms
+            time_to_sleep_s = F_SWEEPINTERVAL_S - (time.monotonic() - self.f_last_dac_set_s)
+            if time_to_sleep_s > 0.001: # It doesn't make sense for the operarting system to stop for less than 1ms
                 assert time_to_sleep_s <= F_SWEEPINTERVAL_S
                 time.sleep(time_to_sleep_s)
-        
+
         # Now set the new values to the DACs
+        self.f_last_dac_set_s = time.monotonic()
         self.__sync_dac_set()
 
         return b_done, dict_changed_values
@@ -262,6 +260,7 @@ class Compact2012:
         self.__update_status_return(str_status)
 
         self.save_values_to_file()
+
 
     def __update_status_return(self, str_status):
         list_pyboard_status = eval(str_status)
