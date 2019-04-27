@@ -11,8 +11,12 @@ logger = logging.getLogger('compact_2012')
 logger.setLevel(logging.DEBUG)
 
 directory = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(directory, 'compact_2012_mpfshell'))
-sys.path.insert(0, os.path.join(directory, 'compact_2012_pyserial'))
+for subproject in ('compact_2012_mpfshell', 'compact_2012_pyserial'):
+    filename_requirements = os.path.join(directory, subproject, 'requirements.txt')
+    if not os.path.exists(filename_requirements):
+        raise Exception('The file "{}" is missing. You have git-clone the subproject "{}" too!'.format(filename_requirements, subproject))
+    sys.path.insert(0, os.path.join(directory, subproject))
+
 from mp.mpfexp import MpFileExplorer, RemoteIOError
 
 import compact_2012_dac
