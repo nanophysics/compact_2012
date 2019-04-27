@@ -4,12 +4,11 @@ import sys
 import re
 import math
 import time
-import binascii
-import platform
+import logging
 
-str_32bit = platform.architecture()[0]
-if str_32bit != '32bit':
-    raise Exception('Only 32 platform is supported due to a limitation in "pyserial". In Labber set "Run in 32-bit mode"!')
+logger = logging.getLogger('compact_2012')
+
+logger.setLevel(logging.DEBUG)
 
 directory = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(directory, 'compact_2012_mpfshell'))
@@ -70,6 +69,39 @@ SAVE_VALUES_TO_DISK_TIME_S=1.0
 # sweep set interval, in seconds
 F_SWEEPINTERVAL_S = 0.03
 
+class TimeSpan:
+    def __init__(self, i_measurements, s_name):
+        self._i_measurements = i_measurements
+        self._s_name = s_name
+        self._reset()
+    
+    def _reset(self):
+        self._f_time_start_s = None
+        self._i_count = 0
+        self._f_sum_ms = 0.0
+        self._f_min_ms = 10000000.0
+        self._f_max_ms = 0.0
+    
+    def start(self):
+        self._f_time_start_s = time.perf_counter()
+    
+    def end(self):
+        if self._i_count >= self._i_measurements:
+            logger.debug('{}: min={:4.1f}ms avg={:4.1f}ms max={:4.1f}ms'.format(
+                self._s_name,
+                self._f_min_ms,
+                self._f_sum_ms/self._i_count,
+                self._f_max_ms
+            ))
+            self._reset()
+            return
+        assert self._f_time_start_s is not None
+        f_time_elapsed_ms = 1000.0*(time.perf_counter() - self._f_time_start_s)
+        self._i_count += 1
+        self._f_sum_ms += f_time_elapsed_ms
+        self._f_min_ms = min(self._f_min_ms, f_time_elapsed_ms)
+        self._f_max_ms = max(self._f_max_ms, f_time_elapsed_ms)
+
 class Dac:
     def __init__(self, index):
         self.index = index
@@ -84,6 +116,9 @@ class Compact2012:
         self.f_write_file_time_s = 0.0
         self.str_filename_values = os.path.join(directory, 'Values-{}.txt'.format(str_port))
         self.list_dacs = list(map(lambda i: Dac(i), range(DACS_COUNT)))
+
+        self.obj_time_span_set_dac = TimeSpan(100, 'set_dac()')
+        self.obj_time_span_get_status = TimeSpan(100, 'get_status()')
 
         # The time when the dac was set last.
         self.f_last_dac_set_s = 0.0
@@ -135,9 +170,9 @@ class Compact2012:
             Only save once per SAVE_VALUES_TO_DISK_TIME_S for better performance.
         '''
         if not b_force:
-            if time.time() < self.f_write_file_time_s:
+            if time.perf_counter() < self.f_write_file_time_s:
                 return
-        self.f_write_file_time_s = time.time() + SAVE_VALUES_TO_DISK_TIME_S
+        self.f_write_file_time_s = time.perf_counter() + SAVE_VALUES_TO_DISK_TIME_S
         def f(obj_Dac):
             return '{:0.4f}'.format(obj_Dac.f_value_V)
         list_values = map(f, self.list_dacs)
@@ -237,13 +272,13 @@ class Compact2012:
 
         if b_need_wait_before_DAC_set:
             # We have to make sure, that the last call was not closer than F_SWEEPINTERVAL_S
-            time_to_sleep_s = F_SWEEPINTERVAL_S - (time.monotonic() - self.f_last_dac_set_s)
+            time_to_sleep_s = F_SWEEPINTERVAL_S - (time.perf_counter() - self.f_last_dac_set_s)
             if time_to_sleep_s > 0.001: # It doesn't make sense for the operarting system to stop for less than 1ms
                 assert time_to_sleep_s <= F_SWEEPINTERVAL_S
                 time.sleep(time_to_sleep_s)
 
         # Now set the new values to the DACs
-        self.f_last_dac_set_s = time.monotonic()
+        self.f_last_dac_set_s = time.perf_counter()
         self.__sync_dac_set()
 
         return b_done, dict_changed_values
@@ -256,10 +291,13 @@ class Compact2012:
         f_values_plus_min_v = list(map(lambda obj_Dac: obj_Dac.f_value_V, self.list_dacs))
         str_dac28 = compact_2012_dac.getDAC28HexStringFromValues(f_values_plus_min_v)
         s_py_command = 'set_dac("{}")'.format(str_dac28)
+        self.obj_time_span_set_dac.start()
         str_status = self.fe.eval(s_py_command)
-        self.__update_status_return(str_status)
+        self.obj_time_span_set_dac.end()
+        # print(str_status)
+        # self.__update_status_return(str_status)
 
-        self.save_values_to_file()
+        # self.save_values_to_file()
 
 
     def __update_status_return(self, str_status):
@@ -267,13 +305,15 @@ class Compact2012:
         assert len(list_pyboard_status) == 2
         self.b_pyboard_error = list_pyboard_status[0]
         self.i_pyboard_geophone_dac = list_pyboard_status[1]
-        self.f_pyboard_geophone_read_s = time.time()
+        self.f_pyboard_geophone_read_s = time.perf_counter()
 
     def sync_status_get(self):
         '''
             Poll for the pyboard_status
         '''
+        self.obj_time_span_get_status.start()
         str_status = self.fe.eval('get_status()')
+        self.obj_time_span_get_status.end()
         self.__update_status_return(str_status)
 
     def sync_set_user_led(self, on):
@@ -291,7 +331,7 @@ class Compact2012:
         print('geophone:                      dac={:016b}={:04d} [0..4095], voltage={:06f}mV, percent={:04.01f}'.format(self.i_pyboard_geophone_dac, self.i_pyboard_geophone_dac, self.__read_geophone_voltage(), self.get_geophone_percent_FS()))
 
     def __sync_get_geophone(self):
-        f_geophone_age_s = time.time() - self.f_pyboard_geophone_read_s
+        f_geophone_age_s = time.perf_counter() - self.f_pyboard_geophone_read_s
         if f_geophone_age_s > GEOPHONE_MAX_AGE_S:
             # This will read 'self.i_pyboard_geophone_dac'
             self.sync_status_get()

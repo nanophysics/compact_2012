@@ -1,7 +1,7 @@
 import time
 import compact_2012_driver
 
-if __name__ != '__main__':
+if __name__ == '__main__':
     driver = compact_2012_driver.Compact2012('COM7')
     driver.sync_set_geophone_led_threshold_percent_FS(10.0)
 
@@ -11,9 +11,9 @@ if __name__ != '__main__':
             driver.debug_geophone_print()
             time.sleep(0.4)
 
-    if False:
+    if True:
         start = time.time()
-        COUNT = 100
+        COUNT = 602
         for i in range(COUNT):
               driver.sync_dac_set_all({0: {'f_DA_OUT_desired_V': -2.5,}})
               driver.sync_dac_set_all({0: {'f_DA_OUT_desired_V': 2.5,}})
