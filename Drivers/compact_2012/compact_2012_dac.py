@@ -63,8 +63,8 @@ def getDAC28HexStringFromValues(f_values_plus_min_v):
         >>> set_dac_nibbles(str_dac28)
         >>> dac20_nibbles
         bytearray(b'1FFFFF1FFFFF1C000019999918CCCC180000173333166666140000100000')
-        >>> dac8_nibbles
-        bytearray(b'07F03307F03300003304C033066033000033019033033033000033000033')
+        >>> binascii.hexlify(dac8_bytes)
+        b'07F03307F03300003304C033066033000033019033033033000033000033'
 
         >>> dac8_bytes_value1to9, dac8_bytes_value10 = splice_dac8()
         >>> len(dac8_bytes_value1to9)
