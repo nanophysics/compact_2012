@@ -300,12 +300,12 @@ class Compact2012:
         str_dac28 = compact_2012_dac.getDAC28HexStringFromValues(f_values_plus_min_v)
         s_py_command = 'set_dac("{}")'.format(str_dac28)
         self.obj_time_span_set_dac.start()
+        
         str_status = self.fe.eval(s_py_command)
-        self.obj_time_span_set_dac.end()
-        # print(str_status)
-        # self.__update_status_return(str_status)
 
-        # self.save_values_to_file()
+        self.obj_time_span_set_dac.end()
+        self.__update_status_return(str_status)
+        self.save_values_to_file()
 
 
     def __update_status_return(self, str_status):
