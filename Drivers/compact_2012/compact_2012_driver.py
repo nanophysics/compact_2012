@@ -70,6 +70,9 @@ SAVE_VALUES_TO_DISK_TIME_S=1.0
 F_SWEEPINTERVAL_S = 0.03
 
 class TimeSpan:
+    '''
+      A helper to measure the time required to communicate with the pyboard.
+    '''
     def __init__(self, i_measurements, s_name):
         self._i_measurements = i_measurements
         self._s_name = s_name
@@ -272,7 +275,8 @@ class Compact2012:
 
         if b_need_wait_before_DAC_set:
             # We have to make sure, that the last call was not closer than F_SWEEPINTERVAL_S
-            time_to_sleep_s = F_SWEEPINTERVAL_S - (time.perf_counter() - self.f_last_dac_set_s)
+            OVERHEAD_TIME_SLEEP_S = 0.001
+            time_to_sleep_s = F_SWEEPINTERVAL_S - (time.perf_counter() - self.f_last_dac_set_s) - OVERHEAD_TIME_SLEEP_S
             if time_to_sleep_s > 0.001: # It doesn't make sense for the operarting system to stop for less than 1ms
                 assert time_to_sleep_s <= F_SWEEPINTERVAL_S
                 time.sleep(time_to_sleep_s)

@@ -11,9 +11,9 @@ if __name__ == '__main__':
             driver.debug_geophone_print()
             time.sleep(0.4)
 
-    if True:
+    if False:
         start = time.time()
-        COUNT = 602
+        COUNT = 200
         for i in range(COUNT):
               driver.sync_dac_set_all({0: {'f_DA_OUT_desired_V': -2.5,}})
               driver.sync_dac_set_all({0: {'f_DA_OUT_desired_V': 2.5,}})
@@ -27,14 +27,29 @@ if __name__ == '__main__':
         pass
 
     def set(dict_requested_values):
+        start_s = time.perf_counter()
         while True:
             b_done, dict_changed_values = driver.sync_dac_set_all(dict_requested_values)
-            print('dict_changed_values: {}'.format(dict_changed_values))
-            print('geophone_percent_FS:                                    {:3.1f}%'.format(driver.get_geophone_percent_FS()))
+            print('{:3.1f}%, dict_changed_values: {}'.format(driver.get_geophone_percent_FS(), dict_changed_values))
             if b_done:
-                print('done')
+                print('done {:3.1f}ms'.format(1000.0*(time.perf_counter() - start_s)))
                 break
 
+    set({
+        0: {
+          'f_DA_OUT_desired_V': 6.0,
+        },
+        1: {
+          'f_DA_OUT_desired_V': 6.5,
+          'f_gain': 0.5,
+        },
+        2: {
+          'f_DA_OUT_desired_V': 6.0,
+          'f_gain': 0.2,
+        },
+    })
+  
+    # 1: (6.5V-1.5V)/2.5V/s = 2s
     set({
         0: {
           'f_DA_OUT_desired_V': 2.5,
@@ -42,7 +57,7 @@ if __name__ == '__main__':
         },
         1: {
           'f_DA_OUT_desired_V': 1.5,
-          'f_DA_OUT_sweep_VperSecond': 5.0,
+          'f_DA_OUT_sweep_VperSecond': 2.5,
           'f_gain': 0.5,
         },
         2: {
