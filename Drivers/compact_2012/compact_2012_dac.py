@@ -32,7 +32,16 @@ def getDAC20DAC12IntFromValue(value_plus_min_v):
     '''
     dac30_value = getDAC30FromValue(value_plus_min_v)
     dac20_value = dac30_value >> 10
-    dac12_value = (dac30_value & 0x0FFF) >> 2
+    dac10_value = (dac30_value & 0x0FFF) >> 2
+
+    def calibartionLookup():
+        '''
+            This function returns a DAC12 offset for every 'dac20_value'.
+            Additionally, the index of the DAC is required
+        '''
+        return 0
+
+    dac12_value = dac10_value + calibartionLookup()
     return dac20_value, dac12_value
 
 def getDAC20DAC12HexStringFromValues(f_values_plus_min_v):

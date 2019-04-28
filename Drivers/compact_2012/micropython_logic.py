@@ -1,5 +1,6 @@
 
 import pyb
+import machine
 import micropython
 import binascii
 import utime
@@ -112,6 +113,13 @@ def communication_activity():
     time_next_communication_blue_led_ms = utime.ticks_add(utime.ticks_ms(), COMMUNICATION_BLUE_LED_INTERVAL_MS)
 
 def set_dac(str_dac20, str_dac12):
+    # We disable the timer interrupts:
+    # With the oscilloscope we have observed spikes which
+    # went disappeared when we disabled the interrupts
+    irq_state = machine.disable_irq()
+    # Enable the interrupts AFTER we left this function
+    micropython.schedule(machine.enable_irq, irq_state)
+
     set_dac20_nibbles(str_dac20)
     set_dac12_nibbles(str_dac12)
 
@@ -213,6 +221,7 @@ spi.init(pyb.SPI.MASTER, baudrate=SPI_BAUDRATE, polarity=SPI_DAC20_DAC12_POLARIT
 
 __spi_initialize_DAC20()
 __spi_read_geophone()
+
 
 def blink(__dummy__):
     # The geophone will be red all 1/BLINK_FREQUENCY_HZ (500ms)
