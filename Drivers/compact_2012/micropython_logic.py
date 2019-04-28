@@ -57,6 +57,8 @@ i_geophone_dac = 0
 i_geophone_threshold_dac = 4096
 
 p_LINE_LDAC_out = pyb.Pin(pyb.Pin.board.Y2, pyb.Pin.IN)
+# When we change p_LINE_LDAC_out to output, we want it to be high!
+p_LINE_LDAC_out.value(1)
 p_LINE_SYNC_out = pyb.Pin(pyb.Pin.board.X10, pyb.Pin.OUT_PP)
 p_CHIPSELECT_AD5791_out = pyb.Pin(pyb.Pin.board.X11, pyb.Pin.OUT_PP)
 p_CHIPSELECT_AD5300_out = pyb.Pin(pyb.Pin.board.Y3, pyb.Pin.OUT_PP)
@@ -117,8 +119,6 @@ def set_dac(str_dac20, str_dac12):
     # With the oscilloscope we have observed spikes which
     # went disappeared when we disabled the interrupts
     irq_state = machine.disable_irq()
-    # Enable the interrupts AFTER we left this function
-    micropython.schedule(machine.enable_irq, irq_state)
 
     set_dac20_nibbles(str_dac20)
     set_dac12_nibbles(str_dac12)
@@ -135,6 +135,9 @@ def set_dac(str_dac20, str_dac12):
     __spi_write_DAC12()
 
     communication_activity()
+
+    # Enable the interrupts AFTER we left this function
+    micropython.schedule(machine.enable_irq, irq_state)
 
     return get_status()
 

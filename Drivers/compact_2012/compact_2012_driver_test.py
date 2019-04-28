@@ -33,8 +33,6 @@ if __name__ == '__main__':
                 d[i] = {'f_DA_OUT_desired_V': f,}
             driver.sync_dac_set_all(d)
 
-            # time.sleep(0.4 - 0.01)
-
     for f_DA_OUT_desired_V in (-2.0, 0.0, 2.0):
         driver.sync_dac_set_all({
             0: {'f_DA_OUT_desired_V': f_DA_OUT_desired_V, 'f_gain': 0.5, },
