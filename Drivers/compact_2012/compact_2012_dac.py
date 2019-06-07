@@ -22,7 +22,11 @@ def getDAC20DAC12IntFromValue(value_plus_min_v):
         >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(0.0)))
         ['0x80000', '0x00000']
         >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(18.0e-6)))
-        ['0x80000', '0x000F1']
+        ['0x80000', '0x003C6']
+        >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(19.0e-6)))
+        ['0x80000', '0x003FC']
+        >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(20.0e-6)))
+        ['0x80001', '0x00031']
         >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(5.0)))
         ['0xC0000', '0x00000']
         >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(10.0)))
@@ -32,7 +36,7 @@ def getDAC20DAC12IntFromValue(value_plus_min_v):
     '''
     dac30_value = getDAC30FromValue(value_plus_min_v)
     dac20_value = dac30_value >> 10
-    dac10_value = (dac30_value & 0x0FFF) >> 2
+    dac10_value = (dac30_value & 0x03FF)
 
     def calibartionLookup():
         '''
@@ -52,7 +56,7 @@ def getDAC20DAC12HexStringFromValues(f_values_plus_min_v):
         >>> str_dac20
         '00000400006666673333800008CCCC99999C0000FFFFFFFFFF'
         >>> str_dac12
-        '0000002663330000CC1990003FF3FF'
+        '0000001990CC0003332660003FF3FF'
         >>> assert len(str_dac20) == DACS_COUNT*DAC20_NIBBLES
         >>> assert len(str_dac12) == DACS_COUNT*DAC12_NIBBLES
         >>> clear_dac_nibbles()
@@ -61,7 +65,7 @@ def getDAC20DAC12HexStringFromValues(f_values_plus_min_v):
         bytearray(b'1FFFFF1FFFFF1C000019999918CCCC180000173333166666140000100000')
         >>> set_dac12_nibbles(str_dac12)
         >>> dac12_nibbles
-        bytearray(b'03FF3303FF3300003301993300CC33000033033333026633000033000033')
+        bytearray(b'03FF3303FF3300003302663303333300003300CC33019933000033000033')
 
         >>> dac12_bytes_value1to9, dac12_bytes_value10 = splice_dac12(dac12_nibbles)
         >>> len(dac12_bytes_value1to9)
@@ -69,7 +73,7 @@ def getDAC20DAC12HexStringFromValues(f_values_plus_min_v):
         >>> len(dac12_bytes_value10)
         3
         >>> binascii.hexlify(dac12_bytes_value1to9)
-        b'03ff3303ff3300003301993300cc33000033033333026633000033'
+        b'03ff3303ff3300003302663303333300003300cc33019933000033'
         >>> binascii.hexlify(dac12_bytes_value10)
         b'000033'
     '''
