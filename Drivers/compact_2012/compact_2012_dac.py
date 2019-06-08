@@ -48,6 +48,7 @@ def getDAC20DAC12IntFromValue(value_plus_min_v):
     dac12_value = dac10_value + calibartionLookup()
     return dac20_value, dac12_value
 
+
 def getDAC20DAC12HexStringFromValues(f_values_plus_min_v):
     '''
         Convert the desired voltage into a integer from [0..DAC30_MAX-1].
@@ -86,8 +87,8 @@ def getDAC20DAC12HexStringFromValues(f_values_plus_min_v):
         list_i_dac20.append(dac20_value)
         list_i_dac12.append(dac12_value)
 
-    str_dac20 = ''.join(map(DAC20_FORMAT_HEX.format, list_i_dac20))
-    str_dac12 = ''.join(map(DAC12_FORMAT_HEX.format, list_i_dac12))
+    str_dac20 = getHexStringFromListInt20(list_i_dac20)
+    str_dac12 = getHexStringFromListInt12(list_i_dac12)
 
     assert len(str_dac20) == DACS_COUNT * DAC20_NIBBLES
     assert len(str_dac12) == DACS_COUNT * DAC12_NIBBLES

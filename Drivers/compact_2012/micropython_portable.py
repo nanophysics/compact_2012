@@ -104,3 +104,67 @@ def splice_dac12(dac12_nibbles):
     assert len(dac12_bytes_value1to9) == (DACS_COUNT-1)*DAC20_REGISTER_BYTES
     assert len(dac12_bytes_value10) == DAC20_REGISTER_BYTES
     return dac12_bytes_value1to9, dac12_bytes_value10
+
+def getHexStringFromListInt20(list_i_dac20):
+    # list_i_dac20 = (0x02, 0xF87, ...)
+    str_dac20 = ''.join(map(DAC20_FORMAT_HEX.format, list_i_dac20))
+    # str_dac20: '00000400006666673333800008CCCC99999C0000FFFFFFFFFF'
+    return str_dac20
+
+def getHexStringFromListInt12(list_i_dac12):
+    # list_i_dac12 = (0x02, 0xF87, ...)
+    str_dac12 = ''.join(map(DAC12_FORMAT_HEX.format, list_i_dac12))
+    # str_dac12: '0000001990CC0003332660003FF3FF'
+    return str_dac12
+
+#
+# Logic for 'calib_' only
+#
+CALIB_RAW_FILETYPE='CALIB_RAW_FILETYPE'
+CALIB_RAW_VERSION='CALIB_RAW_VERSION'
+CALIB_RAW_DAC_START_I='CALIB_RAW_DAC_START_I'
+CALIB_RAW_DAC_A_INDEX='CALIB_RAW_DAC_A_INDEX'
+CALIB_RAW_FILETYPE_LIMP='CALIB_RAW_FILETYPE_LIMP'
+
+class CalibRawFileWriter:
+    def __init__obsolete(self, filename, iDacStart):
+        assert isinstance(iDacStart, int)
+        self.f = open(filename, 'w')
+        self.f.write(CALIB_RAW_FILETYPE_LIMP_V10)
+        self.f.write('\n')
+        self.f.write('{:X}\n'.format(iDacStart))
+        self.iDacStart = iDacStart
+
+    def __init__(self, filename, iDacStart, iDacA_index):
+        assert isinstance(iDacStart, int)
+        assert isinstance(iDacA_index, int)
+        dict_config = {}
+        dict_config[CALIB_RAW_FILETYPE] = CALIB_RAW_FILETYPE_LIMP
+        dict_config[CALIB_RAW_VERSION] = '1.0'
+        dict_config[CALIB_RAW_DAC_START_I] = iDacStart
+        dict_config[CALIB_RAW_DAC_A_INDEX] = iDacA_index
+
+        self.f = open(filename, 'w')
+        self.f.write(str(dict_config))
+        self.f.write('\n')
+        self.iDacStart = iDacStart
+
+    def write_obsolete(self, iDAC20a, iDAC20b, c, iAD24):
+        iDiff_a = iDAC20a-self.iDacStart
+        iDiff_b = iDAC20b-self.iDacStart
+        assert 0 <= iDiff_a <= 1
+        assert 0 <= iDiff_b <= 1
+        assert iDiff_a+iDiff_b == 1
+        self.f.write('{}{:X}\n'.format(c, iAD24))
+
+    def write_obsolete(self, c, iAD24):
+        self.f.write('{}{:X}\n'.format(c, iAD24))
+
+    def write(self, c, list_iAD24):
+        self.f.write(c)
+        self.f.write(','.join('{:X}'.format(iAD24) for iAD24 in list_iAD24))
+        self.f.write('\n')
+
+    def close(self):
+        self.f.close()
+        self.f = None

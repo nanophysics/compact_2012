@@ -67,6 +67,15 @@ p_LED_RED_out = pyb.Pin(pyb.Pin.board.Y5, pyb.Pin.OUT_PP)
 p_LED_GREEN_out = pyb.Pin(pyb.Pin.board.Y6, pyb.Pin.OUT_PP)
 p_LED_BLUE_out = pyb.Pin(pyb.Pin.board.Y7, pyb.Pin.OUT_PP)
 
+p_CALIB_MUX_A0 = pyb.Pin(pyb.Pin.board.X1, pyb.Pin.OUT_PP)
+p_CALIB_MUX_A1 = pyb.Pin(pyb.Pin.board.X2, pyb.Pin.OUT_PP)
+p_CALIB_MUX_A2 = pyb.Pin(pyb.Pin.board.X3, pyb.Pin.OUT_PP)
+
+# pins fixen
+# DRDY = Pin('Y12', Pin.IN_PP) # Datasheet: Data ready, active low. Connect to DVDD using a pullup resistor.
+p_RESET = pyb.Pin(pyb.Pin.board.Y11, pyb.Pin.OUT_PP)
+
+
 def pyboard_init():
     p_LINE_SYNC_out.value(0)
     p_CHIPSELECT_AD5791_out.value(1)
@@ -141,12 +150,14 @@ def set_dac(str_dac20, str_dac12):
 
     return get_status()
 
+
 def __spi_initialize_DAC20():
     p_CHIPSELECT_AD5791_out.value(0)
     p_LINE_SYNC_out.value(0)
     spi.send_recv(bytearray_initialization, timeout=100)
     p_LINE_SYNC_out.value(1)
     p_CHIPSELECT_AD5791_out.value(1)
+
 
 def __spi_write_DAC20():
     p_CHIPSELECT_AD5791_out.value(0)
@@ -160,6 +171,7 @@ def __spi_write_DAC20():
     p_LINE_LDAC_out.value(1)
     p_LINE_LDAC_out.init(mode=pyb.Pin.IN)
     p_CHIPSELECT_AD5791_out.value(1)
+
 
 def __spi_write_DAC12():
     p_LINE_SYNC_out.value(0)
@@ -178,6 +190,7 @@ def __spi_write_DAC12():
 
     p_CHIPSELECT_AD5791_out.value(1)
     p_LINE_SYNC_out.value(1)
+
 
 def __spi_read_geophone():
     # http://ww1.microchip.com/downloads/en/devicedoc/21290d.pdf
@@ -198,17 +211,83 @@ def __spi_read_geophone():
     # Filter 12 bits: the MCP3201 has 12 bit resolution
     i_geophone_dac &= 0xFFF
 
+
 def get_status():
     return b_error, i_geophone_dac
+
 
 def set_geophone_threshold_dac(i_threshold_dac):
     global i_geophone_threshold_dac
     i_geophone_threshold_dac = i_threshold_dac
 
+
 def set_user_led(on):
     assert isinstance(on, bool)
     p_LED_GREEN_out.value(on)
 
+#
+# Logic for 'calib_' only
+#
+
+adc = None
+def calib_raw_init():
+    p_RESET.value(1)  # active low, deshalb auf 1
+
+    global adc
+    adc = ADS1219(i2c)
+
+    adc.set_channel(ADS1219.CHANNEL_AIN0_AIN1)
+    adc.set_conversion_mode(ADS1219.CM_SINGLE)
+    adc.set_vref(ADS1219.VREF_EXTERNAL)
+    adc.set_gain(ADS1219.GAIN_1X)  # GAIN_1X, GAIN_4X
+    adc.set_data_rate(ADS1219.DR_20_SPS)
+
+
+def calib_raw_measure(filename, iDacA_index, iDacStart, iDacEnd):
+    # Mux auf channel 1 schalten, spaeter erweitern auf total 5 channel
+    p_CALIB_MUX_A0.value(0)
+    p_CALIB_MUX_A1.value(0)
+    p_CALIB_MUX_A2.value(0)
+
+    gain_AD8428 = 2000.0
+    i_mittelwert = 3
+    factor = 3.3/(2.0**23)/gain_AD8428/float(i_mittelwert)
+    messbereich_V = 0.0007  # Referenzpin ca. 1.6V / 2000
+    list_i_dac12 = [0]*DACS_COUNT
+    str_dac12 = getHexStringFromListInt12(list_i_dac12)
+
+    # 'iDacA_index' must even and in (0, 2, .. 8)
+    assert 0 <= iDacA_index < DACS_COUNT-1
+    assert iDacA_index % 2 == 0
+
+    w = CalibRawFileWriter(filename, iDacStart, iDacA_index)
+
+    for iDac in range(iDacStart, iDacEnd-1):
+        def measure(iDAC20a, iDAC20b, c):
+            # Set output on DAC20 and DAC12
+            list_i_dac20 = [0]*DACS_COUNT
+            list_i_dac20[iDacA_index] = iDAC20a
+            list_i_dac20[iDacA_index+1] = iDAC20b
+            str_dac20 = getHexStringFromListInt20(list_i_dac20)
+            set_dac(str_dac20, str_dac12)
+
+            # Read from AD24
+            if False:
+                iAD24 = adc.read_data()
+                w.write_obsolete(c, iAD24)
+            if True:
+                list_iAD24 = [adc.read_data() for i in range(5)]
+                w.write(c, list_iAD24)
+
+        measure(iDac, iDac, 'a')
+        measure(iDac, iDac+1, 'b')
+
+    w.close()
+
+
+#
+# Main
+#
 pyboard_init()
 
 micropython.alloc_emergency_exception_buf(100)
@@ -217,6 +296,8 @@ timer_blink = pyb.Timer(4, freq=BLINK_FREQUENCY_HZ)
 # The LED on the pyboard
 pyb_led_red = pyb.LED(1)
 pyb_led_red.on()
+
+i2c = machine.I2C(scl=machine.Pin('Y9'), sda=machine.Pin('Y10'))
 
 spi = pyb.SPI(1)
 
@@ -249,5 +330,6 @@ def blink(__dummy__):
     b_led_red_on = i_geophone_dac >= i_geophone_threshold_dac
     p_LED_RED_out.value(b_led_red_on)
     p_LED_BLUE_out.value(b_led_toggle_on and b_led_blue_is_blinking)
+
 
 timer_blink.callback(lambda timer: micropython.schedule(blink, None))

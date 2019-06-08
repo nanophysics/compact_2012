@@ -184,7 +184,7 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
                 f.write('DA{} {:8.8f} V     (range, jumper, {})\n'.format(obj_Dac.index+1, obj_Dac.f_value_V*obj_Dac.f_gain, obj_Dac.get_gain_string()))
 
     def __sync_init(self):
-        for filename in ('micropython_portable.py', 'micropython_logic.py'):
+        for filename in ('micropython_ads1219.py', 'micropython_portable.py', 'micropython_logic.py'):
             filenameFull = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
             # self.fe.put(filenameFull, filename)
             self.fe.execfile(filenameFull)
@@ -355,4 +355,24 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
 
     def get_geophone_particle_velocity(self):
         return self.__read_geophone_voltage()/GEOPHONE_VOLTAGE_TO_PARTICLEVELOCITY_FACTOR
+
+    #
+    # Logic for 'calib_' only
+    #
+    def sync_calib_raw_init(self):
+        '''
+        Initializes the AD20
+        '''
+        self.fe.eval('calib_raw_init()')
+
+    def sync_calib_raw_measure(self, filename, iDacA_index, iDacStart, iDacEnd):
+        '''
+        Initializes the AD20
+        '''
+        self.fe.eval('calib_raw_measure("{}", {}, {}, {})'.format(filename, iDacA_index, iDacStart, iDacEnd))
+        pass
+
+    def calib_raw_readfile(self, filename):
+        filenameFull = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
+        self.fe.get(filename, filenameFull)
 
