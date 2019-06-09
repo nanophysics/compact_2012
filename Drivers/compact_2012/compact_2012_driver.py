@@ -60,6 +60,7 @@ for subproject in ('compact_2012_mpfshell', 'compact_2012_pyserial'):
 from mp.mpfexp import MpFileExplorer, RemoteIOError
 
 import compact_2012_dac
+import calib_prepare_lib
 from micropython_portable import *
 
 
@@ -140,6 +141,8 @@ class Compact2012:
             raise Exception('Expected a string like "COM5", but got "{}"'.format(str_port))
         str_port2 = 'ser:' + str_port
 
+        self.__calibrationLookup = None
+        self.ignore_str_dac12 = False
         self.f_write_file_time_s = 0.0
         self.str_filename_values = os.path.join(directory, 'Values-{}.txt'.format(str_port))
         self.list_dacs = list(map(lambda i: Dac(i), range(DACS_COUNT)))
@@ -155,12 +158,21 @@ class Compact2012:
         self.i_pyboard_geophone_dac = 0
         self.f_pyboard_geophone_read_s = 0
 
+        self.load_calibration_lookup()
         self.fe = MpFileExplorer(str_port2, reset=True)
         self.__sync_init()
 
     def close(self):
         self.save_values_to_file()
         self.fe.close()
+
+    def load_calibration_lookup(self):
+        calib_correction_data = calib_prepare_lib.CalibCorrectionData()
+        calib_correction_data.load('Drivers/compact_2012/calib_correction_a.npz')
+        self.__calibrationLookup = calib_correction_data.calibrationLookup
+
+    def reset_calibration_lookup(self):
+        self.__calibrationLookup = None
 
     def save_values_to_file(self, b_force=False):
         '''
@@ -298,7 +310,9 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
             Return pyboard_status.
         '''
         f_values_plus_min_v = list(map(lambda obj_Dac: obj_Dac.f_value_V, self.list_dacs))
-        str_dac20, str_dac12 = compact_2012_dac.getDAC20DAC12HexStringFromValues(f_values_plus_min_v)
+        str_dac20, str_dac12 = compact_2012_dac.getDAC20DAC12HexStringFromValues(f_values_plus_min_v, calibrationLookup=self.__calibrationLookup)
+        if self.ignore_str_dac12:
+            str_dac12 = '0'*DACS_COUNT*DAC12_NIBBLES
         s_py_command = 'set_dac("{}", "{}")'.format(str_dac20, str_dac12)
         self.obj_time_span_set_dac.start()
         

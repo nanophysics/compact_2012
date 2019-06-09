@@ -1,19 +1,29 @@
 '''
 
 '''
-
+import itertools
 from micropython_portable import *
 
+def getValueFromDAC20(dac20_value):
+    '''Assert gain=1.0'''
+    assert isinstance(dac20_value, int)
+    assert 0 <= dac20_value < DAC20_MAX
+    value = VALUE_PLUS_MIN_MAX_V * 2.0 * dac20_value / DAC20_MAX - VALUE_PLUS_MIN_MAX_V
+    return value
 
 def getDAC30FromValue(value_plus_min_v):
+    assert isinstance(value_plus_min_v, float)
+
     # scale to [0..DAC30_MAX-1]
     dac30_value = DAC30_MAX*(value_plus_min_v+VALUE_PLUS_MIN_MAX_V)/VALUE_PLUS_MIN_MAX_V/2.0
     dac30_value = int(dac30_value)
     # clip to [0..DAC30_MAX-1]
     dac30_value_clipped = min(max(dac30_value, 0), DAC30_MAX-1)
+
+    assert isinstance(dac30_value_clipped, int)
     return dac30_value_clipped
 
-def getDAC20DAC12IntFromValue(value_plus_min_v):
+def getDAC20DAC12IntFromValue(value_plus_min_v, calibrationLookup=None, iDac_index=0):
     '''
         Convert the desired voltage into a integer from [0..DAC30_MAX-1].
 
@@ -34,22 +44,24 @@ def getDAC20DAC12IntFromValue(value_plus_min_v):
         >>> list(map('0x{:05X}'.format, getDAC20DAC12IntFromValue(15.0)))
         ['0xFFFFF', '0x003FF']
     '''
+    assert 0 <= iDac_index <= DACS_COUNT
+
     dac30_value = getDAC30FromValue(value_plus_min_v)
     dac20_value = dac30_value >> 10
     dac10_value = (dac30_value & 0x03FF)
 
-    def calibartionLookup():
-        '''
-            This function returns a DAC12 offset for every 'dac20_value'.
-            Additionally, the index of the DAC is required
-        '''
-        return 0
+    dac12_value = dac10_value
+    if calibrationLookup is not None:
+        # calibrationLookup(): This function returns a DAC12 offset for every 'dac20_value'.
+        dac12_correctur = calibrationLookup(iDac_index, dac20_value)
+        assert dac12_correctur < DAC12_MAX_CORRECTION_VALUE
+        dac12_value += dac12_correctur
+        assert 0 <= dac12_value < DAC12_MAX
 
-    dac12_value = dac10_value + calibartionLookup()
     return dac20_value, dac12_value
 
 
-def getDAC20DAC12HexStringFromValues(f_values_plus_min_v):
+def getDAC20DAC12HexStringFromValues(f_values_plus_min_v, calibrationLookup=None):
     '''
         Convert the desired voltage into a integer from [0..DAC30_MAX-1].
 
@@ -82,8 +94,8 @@ def getDAC20DAC12HexStringFromValues(f_values_plus_min_v):
 
     list_i_dac20  = []
     list_i_dac12 = []
-    for f_value_plus_min_v in f_values_plus_min_v:
-        dac20_value, dac12_value = getDAC20DAC12IntFromValue(f_value_plus_min_v)
+    for iDac_index, f_value_plus_min_v in zip(itertools.count(), f_values_plus_min_v):
+        dac20_value, dac12_value = getDAC20DAC12IntFromValue(f_value_plus_min_v, calibrationLookup, iDac_index)
         list_i_dac20.append(dac20_value)
         list_i_dac12.append(dac12_value)
 

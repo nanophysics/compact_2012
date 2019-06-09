@@ -27,6 +27,8 @@ DAC12_MAX = 2**DAC12_BITS
 # '{:03X}' => '000', '800', 'A66'
 DAC12_FORMAT_HEX = '{:0' + str(DAC12_NIBBLES) + 'X}'
 
+DAC12_MAX_CORRECTION_VALUE=DAC12_MAX-2**10
+
 # DAC20 and 10 bits from DAC12
 DAC30_MAX = 2**30
 
@@ -179,6 +181,7 @@ class CalibRawFileReader:
         str_dict = self.f.readline()
         dict_config = eval(str_dict)
         self.iDacStart = dict_config[CALIB_RAW_DAC_START_I]
+        self.iDacA_index = dict_config[CALIB_RAW_DAC_A_INDEX]
 
     def values(self):
         list_step_a_V = []
