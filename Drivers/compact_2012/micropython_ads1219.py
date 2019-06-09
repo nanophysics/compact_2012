@@ -97,7 +97,17 @@ class ADS1219:
         self._i2c.writeto(self._address, rreg)
         data = self._i2c.readfrom(self._address, 3)
         return ustruct.unpack('>I', b'\x00' + data)[0]
-        
+
+    def read_data_signed(self):
+        measured_unsigned = self.read_data()
+        # See datasheet '8.5.2 Dataformat'
+        # 0x000000: 0V
+        # 0x7fffff: max
+        # 0x800000: -max
+        if measured_unsigned & 0x800000:
+            return -0x1000000 + measured_unsigned
+        return measured_unsigned
+
     def reset(self):
         data = ustruct.pack('B', _COMMAND_RESET)
         self._i2c.writeto(self._address, data)  

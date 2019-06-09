@@ -120,6 +120,14 @@ def getHexStringFromListInt12(list_i_dac12):
 #
 # Logic for 'calib_' only
 #
+def convert_ADC24_signed_to_V(iADC24_signed):
+    assert isinstance(iADC24_signed, int)
+    gain_AD8428 = 2000.0
+    factor = 3.3/(2.0**23)/gain_AD8428
+
+    fADC24 = iADC24_signed*factor
+    return fADC24
+
 CALIB_RAW_FILETYPE='CALIB_RAW_FILETYPE'
 CALIB_RAW_VERSION='CALIB_RAW_VERSION'
 CALIB_RAW_DAC_START_I='CALIB_RAW_DAC_START_I'
@@ -157,14 +165,49 @@ class CalibRawFileWriter:
         assert iDiff_a+iDiff_b == 1
         self.f.write('{}{:X}\n'.format(c, iAD24))
 
-    def write_obsolete(self, c, iAD24):
-        self.f.write('{}{:X}\n'.format(c, iAD24))
-
-    def write(self, c, list_iAD24):
-        self.f.write(c)
+    def write(self, list_iAD24):
         self.f.write(','.join('{:X}'.format(iAD24) for iAD24 in list_iAD24))
         self.f.write('\n')
 
     def close(self):
         self.f.close()
         self.f = None
+
+class CalibRawFileReader:
+    def __init__(self, filename):
+        self.f = open(filename, 'r')
+        str_dict = self.f.readline()
+        dict_config = eval(str_dict)
+        self.iDacStart = dict_config[CALIB_RAW_DAC_START_I]
+
+    def values(self):
+        list_step_a_V = []
+        list_step_b_V = []
+
+        def get_step_V():
+            line = self.f.readline()
+            line = line.strip()
+            if line is None:
+                raise StopIteration()
+            if len(line) == 0:
+                # Empty line at the end of the file
+                raise StopIteration()
+            list_str = line.split(',')
+            list_i = [int(s, 16) for s in list_str]
+            list_V = [convert_ADC24_signed_to_V(signed) for signed in list_i]
+            step_V = sum(list_V)/len(list_V)
+            return step_V
+
+        step_a_V = get_step_V()
+
+        try:
+            while True:
+                step_b_V = get_step_V()
+                list_step_b_V.append(step_a_V - step_b_V)
+
+                step_a_V = get_step_V()
+                list_step_a_V.append(step_a_V - step_b_V)
+        except StopIteration:
+            pass
+
+        return list_step_a_V, list_step_b_V

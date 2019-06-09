@@ -365,10 +365,20 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
         '''
         self.fe.eval('calib_raw_init()')
 
+    def sync_calib_read_ADC24(self):
+        strADC24 = self.fe.eval('calib_read_ADC24()')
+        iADC24 = int(strADC24)
+
+        fADC24 = convert_ADC24_signed_to_V(iADC24)
+        return iADC24, fADC24
+
     def sync_calib_raw_measure(self, filename, iDacA_index, iDacStart, iDacEnd):
         '''
         Initializes the AD20
         '''
+        assert iDacStart >= 0
+        assert iDacEnd < DAC20_MAX
+        assert iDacStart < iDacEnd
         self.fe.eval('calib_raw_measure("{}", {}, {}, {})'.format(filename, iDacA_index, iDacStart, iDacEnd))
         pass
 

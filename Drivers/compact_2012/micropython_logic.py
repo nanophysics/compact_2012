@@ -242,6 +242,9 @@ def calib_raw_init():
     adc.set_gain(ADS1219.GAIN_1X)  # GAIN_1X, GAIN_4X
     adc.set_data_rate(ADS1219.DR_20_SPS)
 
+def calib_read_ADC24():
+    iADC24 = adc.read_data_signed()
+    return str(iADC24)
 
 def calib_raw_measure(filename, iDacA_index, iDacStart, iDacEnd):
     # Mux auf channel 1 schalten, spaeter erweitern auf total 5 channel
@@ -255,6 +258,7 @@ def calib_raw_measure(filename, iDacA_index, iDacStart, iDacEnd):
     messbereich_V = 0.0007  # Referenzpin ca. 1.6V / 2000
     list_i_dac12 = [0]*DACS_COUNT
     str_dac12 = getHexStringFromListInt12(list_i_dac12)
+    MEASUREMENT_COUNT = 3
 
     # 'iDacA_index' must even and in (0, 2, .. 8)
     assert 0 <= iDacA_index < DACS_COUNT-1
@@ -263,7 +267,7 @@ def calib_raw_measure(filename, iDacA_index, iDacStart, iDacEnd):
     w = CalibRawFileWriter(filename, iDacStart, iDacA_index)
 
     for iDac in range(iDacStart, iDacEnd-1):
-        def measure(iDAC20a, iDAC20b, c):
+        def measure(iDAC20a, iDAC20b):
             # Set output on DAC20 and DAC12
             list_i_dac20 = [0]*DACS_COUNT
             list_i_dac20[iDacA_index] = iDAC20a
@@ -271,16 +275,15 @@ def calib_raw_measure(filename, iDacA_index, iDacStart, iDacEnd):
             str_dac20 = getHexStringFromListInt20(list_i_dac20)
             set_dac(str_dac20, str_dac12)
 
-            # Read from AD24
-            if False:
-                iAD24 = adc.read_data()
-                w.write_obsolete(c, iAD24)
-            if True:
-                list_iAD24 = [adc.read_data() for i in range(5)]
-                w.write(c, list_iAD24)
+            # Wait
+            utime.sleep_ms(30)
 
-        measure(iDac, iDac, 'a')
-        measure(iDac, iDac+1, 'b')
+            # Read from ADC24
+            list_iAD24 = [adc.read_data_signed() for i in range(MEASUREMENT_COUNT)]
+            w.write(list_iAD24)
+
+        measure(iDac, iDac)
+        measure(iDac, iDac+1)
 
     w.close()
 
