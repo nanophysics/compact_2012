@@ -14,23 +14,23 @@ if __name__ == '__main__':
     iDacFix_index = 1
     iDacDUT_index = 0
     fDacMiddle_V = 1.640605927
-    fDacPeak_V = 2e-4
-    fDacIncrement_V = 1e-6
+    fDacPeak_V = 70e-6
+    fDacIncrement_V = 0.5e-6
 
     with open(f'Drivers/compact_2012/calib_correction_test_endtest_out.txt', 'w') as f:
-        for do_lookup, ignore_str_dac12 in (
-                (True, False),
+        for do_lookup, use_str_dac in (
                 (True, True),
                 (False, True),
+                (False, False),
             ):
-            driver.ignore_str_dac12 = ignore_str_dac12
-            if ignore_str_dac12:
+            driver.ignore_str_dac12 = not use_str_dac
+            if not do_lookup:
                 driver.reset_calibration_lookup()
 
-            print('do_lookup={do_lookup} ignore_str_dac12={ignore_str_dac12} ', end='')
+            print(f'do_lookup={do_lookup} use_str_dac={use_str_dac} ', end='')
 
             f.write(f'do_lookup={do_lookup}\n')
-            f.write(f'ignore_str_dac12={ignore_str_dac12}\n')
+            f.write(f'use_str_dac={use_str_dac}\n')
             f.write(f'iDacFix_index={iDacFix_index}\n')
             f.write(f'iDacDUT_index={iDacDUT_index}\n')
             f.write(f'fDacMiddle_V={fDacMiddle_V}\n')

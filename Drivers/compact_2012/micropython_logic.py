@@ -246,7 +246,7 @@ def calib_read_ADC24():
     iADC24 = adc.read_data_signed()
     return str(iADC24)
 
-def calib_raw_measure(filename, iDacA_index, iDacStart, iDacEnd):
+def calib_raw_measure(filename, serial, iDacA_index, iDacStart, iDacEnd, f_status=None):
     # Mux auf channel 1 schalten, spaeter erweitern auf total 5 channel
     p_CALIB_MUX_A0.value(0)
     p_CALIB_MUX_A1.value(0)
@@ -259,33 +259,42 @@ def calib_raw_measure(filename, iDacA_index, iDacStart, iDacEnd):
     list_i_dac12 = [0]*DACS_COUNT
     str_dac12 = getHexStringFromListInt12(list_i_dac12)
     MEASUREMENT_COUNT = 3
+    # TODO: Remove following line
+    MEASUREMENT_COUNT = 1
 
     # 'iDacA_index' must even and in (0, 2, .. 8)
     assert 0 <= iDacA_index < DACS_COUNT-1
     assert iDacA_index % 2 == 0
 
-    w = CalibRawFileWriter(filename, iDacStart, iDacA_index)
+    w = CalibRawFileWriter(filename, serial, iDacStart, iDacA_index)
 
-    for iDac in range(iDacStart, iDacEnd-1):
-        def measure(iDAC20a, iDAC20b):
-            # Set output on DAC20 and DAC12
-            list_i_dac20 = [0]*DACS_COUNT
-            list_i_dac20[iDacA_index] = iDAC20a
-            list_i_dac20[iDacA_index+1] = iDAC20b
-            str_dac20 = getHexStringFromListInt20(list_i_dac20)
-            set_dac(str_dac20, str_dac12)
+    try:
+        for iDac in range(iDacStart, iDacEnd-1):
+            if f_status != None:
+                f_status(iDac)
 
-            # Wait
-            utime.sleep_ms(30)
+            def measure(iDAC20a, iDAC20b):
+                # Set output on DAC20 and DAC12
+                list_i_dac20 = [0]*DACS_COUNT
+                list_i_dac20[iDacA_index] = iDAC20a
+                list_i_dac20[iDacA_index+1] = iDAC20b
+                str_dac20 = getHexStringFromListInt20(list_i_dac20)
+                set_dac(str_dac20, str_dac12)
 
-            # Read from ADC24
-            list_iAD24 = [adc.read_data_signed() for i in range(MEASUREMENT_COUNT)]
-            w.write(list_iAD24)
+                # Wait
+                utime.sleep_ms(30)
 
-        measure(iDac, iDac)
-        measure(iDac, iDac+1)
+                # Read from ADC24
+                list_iAD24 = [adc.read_data_signed() for i in range(MEASUREMENT_COUNT)]
+                w.write(list_iAD24)
 
-    w.close()
+            measure(iDac, iDac)
+            measure(iDac, iDac+1)
+        w.close()
+    except KeyboardInterrupt:
+        print('closed "{}"'.format(filename))
+        w.close()
+        raise
 
 
 #
