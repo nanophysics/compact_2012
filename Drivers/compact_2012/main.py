@@ -15,6 +15,8 @@ for filename in ('config_serial.py', 'micropython_ads1219.py', 'micropython_port
   execfile(filename)
 
 
+CALIB_FILES_PER_DAC = 16
+
 try:
   timer_blink.callback(None)
 
@@ -23,12 +25,15 @@ try:
   # 650h: Total
   # 50h: Pro DAC
   # 3h: Pro File (16 File for every DAC)
-  iDacFileSize = DAC20_MAX//16
+  iDacFileSize = DAC20_MAX//CALIB_FILES_PER_DAC
   # Show progress every 10%
   iDacProgress = iDacFileSize//10
   # iDacFileSize = 100
 
   list_files = uos.listdir()
+
+  SETTLE_TIME_S = 10
+  iSettleTime_s = SETTLE_TIME_S
 
   for iDacA_index in range(0, DACS_COUNT, 2):
     for iDacStart in range(0, DAC20_MAX, iDacFileSize):
@@ -39,6 +44,7 @@ try:
       filename = 'calib_raw_{}_dac{}-{}.txt'.format(SERIAL, iDacA_index, iDacStart//iDacFileSize)
       if filename in list_files:
         print('{} exists. Skipped'.format(filename))
+        iSettleTime_s = SETTLE_TIME_S
         continue
 
       FILENAME_TMP = 'tmp.txt'
@@ -66,11 +72,12 @@ try:
               fTimeTotalRemaining_ms/1000.0/60.0/60.0
           ))
 
-      time_start_ms = utime.ticks_ms()
+      time_start_ms = utime.ticks_ms() + 1000*iSettleTime_s
       iDacEnd = iDacStart+iDacFileSize
-      calib_raw_measure(FILENAME_TMP, SERIAL, iDacA_index, iDacStart, iDacEnd, f_status=status)
+      calib_raw_measure(FILENAME_TMP, SERIAL, iDacA_index, iDacStart, iDacEnd, iSettleTime_s=iSettleTime_s, f_status=status)
       uos.rename(FILENAME_TMP, filename)
       print('{}: {}%'.format(filename, 100))
+      iSettleTime_s = 0
 
   p_LED_GREEN_out.on()
   print('DONE: success!')

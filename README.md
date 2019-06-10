@@ -25,6 +25,7 @@ The software used to use this extensions uses the prefix `calib_`.
   - Green LED steady: Done
   - Red LED: Error
 
+- Wait for "Green LED steady'.
 - Remove SD-Card and copy file to TODO
 
 ### `calib_prepare_`: Run calibration algorithmus

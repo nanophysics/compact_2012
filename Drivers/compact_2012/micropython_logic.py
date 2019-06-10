@@ -33,11 +33,11 @@ compact_40_pin_22	pyboard_X12	(CS(1))
 # 1200000: 650000
 # 2000000: 1300000
 # 1312500: 1312500
-SPI_BAUDRATE=1312500
-SPI_GEOPHONE_POLARITY=0
-SPI_GEOPHONE_PHASE=1
-SPI_DAC20_DAC12_POLARITY=1
-SPI_DAC20_DAC12_PHASE=0
+SPI_BAUDRATE = 1312500
+SPI_GEOPHONE_POLARITY = 0
+SPI_GEOPHONE_PHASE = 1
+SPI_DAC20_DAC12_POLARITY = 1
+SPI_DAC20_DAC12_PHASE = 0
 
 # Initialize DAC20 every x seconds
 INITIALIZATION_INTERVAL_MS = 5000
@@ -45,7 +45,7 @@ time_next_initialization_ms = utime.ticks_ms()
 
 # The blinking of the LEDS
 # The geophone will be read every 1/BLINK_FREQUENCY_HZ
-BLINK_FREQUENCY_HZ=2
+BLINK_FREQUENCY_HZ = 2
 
 COMMUNICATION_BLUE_LED_INTERVAL_MS = 2000
 time_next_communication_blue_led_ms = utime.ticks_ms()
@@ -122,6 +122,7 @@ def communication_activity():
     b_led_blue_is_blinking = True
     global time_next_communication_blue_led_ms
     time_next_communication_blue_led_ms = utime.ticks_add(utime.ticks_ms(), COMMUNICATION_BLUE_LED_INTERVAL_MS)
+
 
 def set_dac(str_dac20, str_dac12):
     # We disable the timer interrupts:
@@ -229,7 +230,10 @@ def set_user_led(on):
 # Logic for 'calib_' only
 #
 
+
 adc = None
+
+
 def calib_raw_init():
     p_RESET.value(1)  # active low, deshalb auf 1
 
@@ -242,11 +246,12 @@ def calib_raw_init():
     adc.set_gain(ADS1219.GAIN_1X)  # GAIN_1X, GAIN_4X
     adc.set_data_rate(ADS1219.DR_20_SPS)
 
+
 def calib_read_ADC24():
     iADC24 = adc.read_data_signed()
     return str(iADC24)
 
-def calib_raw_measure(filename, serial, iDacA_index, iDacStart, iDacEnd, f_status=None):
+def calib_raw_measure(filename, serial, iDacA_index, iDacStart, iDacEnd, iSettleTime_s=0, f_status=None):
     # Mux auf channel 1 schalten, spaeter erweitern auf total 5 channel
     p_CALIB_MUX_A0.value(0)
     p_CALIB_MUX_A1.value(0)
@@ -266,14 +271,20 @@ def calib_raw_measure(filename, serial, iDacA_index, iDacStart, iDacEnd, f_statu
     assert 0 <= iDacA_index < DACS_COUNT-1
     assert iDacA_index % 2 == 0
 
+    # We measure differences: We have to measure one step more (See: https://en.wikipedia.org/wiki/Off-by-one_error#Fencepost_error)
+    iDacEnd += 1
+
     w = CalibRawFileWriter(filename, serial, iDacStart, iDacA_index)
 
     try:
-        for iDac in range(iDacStart, iDacEnd-1):
+        for iDac in range(iDacStart, iDacEnd):
             if f_status != None:
                 f_status(iDac)
 
             def measure(iDAC20a, iDAC20b):
+                if iDAC20b >= DAC20_MAX:
+                    # For the very last measurment of a DAC, this will be one step out of the limit.
+                    iDAC20b = DAC20_MAX-1
                 # Set output on DAC20 and DAC12
                 list_i_dac20 = [0]*DACS_COUNT
                 list_i_dac20[iDacA_index] = iDAC20a
@@ -281,11 +292,17 @@ def calib_raw_measure(filename, serial, iDacA_index, iDacStart, iDacEnd, f_statu
                 str_dac20 = getHexStringFromListInt20(list_i_dac20)
                 set_dac(str_dac20, str_dac12)
 
+                if iSettleTime_s > 0:
+                    # Initial sleep makes sure that the voltage may settle
+                    utime.sleep(iSettleTime_s)
+                    iSettleTime_s = 0
+
                 # Wait
                 utime.sleep_ms(30)
 
                 # Read from ADC24
-                list_iAD24 = [adc.read_data_signed() for i in range(MEASUREMENT_COUNT)]
+                list_iAD24 = [adc.read_data_signed()
+                              for i in range(MEASUREMENT_COUNT)]
                 w.write(list_iAD24)
 
             measure(iDac, iDac)

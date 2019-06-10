@@ -8,6 +8,11 @@ import matplotlib.pyplot as plt
 import micropython_portable
 import compact_2012_dac
 
+DIRECTORY_CALIBRATION_RAW='calibration_raw'
+DIRECTORY_CALIBRATION_RAW_FULL=os.path.join(os.path.dirname(__file__), DIRECTORY_CALIBRATION_RAW)
+DIRECTORY_CALIBRATION_CORRECTION='calibration_correction'
+DIRECTORY_CALIBRATION_CORRECTION_FULL=os.path.join(os.path.dirname(__file__), DIRECTORY_CALIBRATION_CORRECTION)
+
 #
 # Logic Peter to calculate 'calib_correction'.
 #
