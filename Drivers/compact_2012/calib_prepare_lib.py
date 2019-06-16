@@ -131,15 +131,21 @@ def prepare_by_serial(serial):
             assert iDacFileSize >= len(list_step_a_V)-1
             assert iDacFileSize >= len(list_step_b_V)-1
 
-            array_stepsize_a_V[iDacStart:iDacStart+len(list_step_a_V)] = list_step_a_V
-            array_stepsize_b_V[iDacStart:iDacStart+len(list_step_b_V)] = list_step_b_V
+            VERSATZ = 1
+
+            array_stepsize_a_V[iDacStart+VERSATZ:iDacStart+len(list_step_a_V)+VERSATZ] = list_step_a_V
+            array_stepsize_b_V[iDacStart+VERSATZ:iDacStart+len(list_step_b_V)+VERSATZ] = list_step_b_V
+
+            array_stepsize_a_V[0] = array_stepsize_a_V[1]
+            array_stepsize_b_V[0] = array_stepsize_b_V[1]
 
         def find_and_add_solution_for_dac(iDac_index_, array_stepsize_V):
             mean_V = array_stepsize_V.mean()
             assert STEPSIZE_EXPECTED_MEAN_MIN_V < mean_V < STEPSIZE_EXPECTED_MEAN_MAX_V, 'Expected a step of about 19uV but got {} V. Check the cabeling!'.format(mean_V)
             _stepsum_dac_12, _stepsize_dac_12, correction_dac_12 = find_solution(array_stepsize_V)
 
-            calib_correction_data.set_correction(iDacA_index=iDac_index_, data=correction_dac_12, iDacStart=1)
+            calib_correction_data.set_correction(iDac_index=iDac_index_, data=correction_dac_12)
+            calib_correction_data.print_extrema(iDac_index=iDac_index_, data=correction_dac_12)
 
         find_and_add_solution_for_dac(iDac_index_=iDacA_index+0, array_stepsize_V=array_stepsize_a_V)
         find_and_add_solution_for_dac(iDac_index_=iDacA_index+1, array_stepsize_V=array_stepsize_b_V)
@@ -157,30 +163,22 @@ class CalibCorrectionData:
         self.filename_txt = os.path.join(directory, FILENAME_CALIBRATION_CORRECTION_TXT)
 
         self.f_comments = io.StringIO()
-        self.data = np.zeros(shape=[micropython_portable.DACS_COUNT, micropython_portable.DAC20_MAX], dtype=np.uint16, order='C')
+        self.data = np.zeros(shape=[micropython_portable.DACS_COUNT, micropython_portable.DAC20_MAX], dtype=np.uint16)
 
-    def set_correction(self, iDacA_index, data, iDacStart):
+    def set_correction(self, iDac_index, data):
         '''
           'data' contains the calib_correction for 'dac_index'. The first dac-value in 'data' is 'iDacStart'
         '''
-        assert 0 <= iDacA_index < micropython_portable.DACS_COUNT
+        assert 0 <= iDac_index < micropython_portable.DACS_COUNT
         assert len(data.shape) == 1
-        assert data.shape[0] <= micropython_portable.DAC20_MAX
-        assert 0 <= iDacStart < micropython_portable.DAC20_MAX
-
-        iEnd = iDacStart + data.shape[0]
-        iOverlapAtEnd = iEnd - micropython_portable.DAC20_MAX
-        if iOverlapAtEnd >= 0:
-            # The last files overlaps by one step.
-            # We reduce it by one step.
-            assert iOverlapAtEnd <= 1
-            data = data[:-1]
+        assert data.shape[0] == micropython_portable.DAC20_MAX
 
         assert data.min() >= 0
         assert data.max() < micropython_portable.DAC12_MAX_CORRECTION_VALUE
 
-        self.data[iDacA_index:iDacA_index+1, iDacStart:iDacStart+data.shape[0]] = data
+        self.data[iDac_index:iDac_index+1, 0:data.shape[0]] = data
 
+    def print_extrema(self, iDac_index, data):
         # import numpy as np
         # R = np.array((2, 2, 4, 5, 0))
         # np.diff(R)
@@ -188,18 +186,14 @@ class CalibCorrectionData:
         data_diff = np.diff(data)
         argmax = np.argmax(data_diff)
         argmin = np.argmin(data_diff)
-        # There is some other code using -1
-        VERSATZ = 1
-        argmin -= VERSATZ
-        argmax -= VERSATZ
         print(f'argmax={argmax}, argmin={argmin}\n')
         def print2(tag, offset):
-            index = int(iDacStart+offset)
+            index = int(offset)
             value_v = compact_2012_dac.getValueFromDAC20(index)
-            self.f_comments.write(f'dac={iDacA_index}: {tag}={index} ({value_v:0.9f} V)\n')
+            self.f_comments.write(f'dac={iDac_index}: {tag}={index} ({value_v:0.9f} V)\n')
         print2('argmin', argmin)
         print2('argmax', argmax)
-        # self.f_comments.write(f'dac={iDacA_index}: argmax={iDacStart+argmax} ({compact_2012_dac.getValueFromDAC20(iDacStart+argmax):0.9f} V), argmin={iDacStart+argmin} ({compact_2012_dac.getValueFromDAC20(iDacStart+argmin):0.9f} V)\n')
+        # self.f_comments.write(f'dac={iDac_index}: argmax={iDacStart+argmax} ({compact_2012_dac.getValueFromDAC20(iDacStart+argmax):0.9f} V), argmin={iDacStart+argmin} ({compact_2012_dac.getValueFromDAC20(iDacStart+argmin):0.9f} V)\n')
 
     def save(self):
         np.savez_compressed(self.filename_npz, data=self.data)

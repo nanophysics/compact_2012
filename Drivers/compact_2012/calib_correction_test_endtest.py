@@ -15,15 +15,16 @@ import compact_2012_driver
 bFast = True
 
 # Drivers\compact_2012\calibration_correction\20190606_01\calibration_correction.txt
-# dac=0: argmin-1=774142 (4.765586853 V)
-# dac=0: argmax-1=688126 (3.124961853 V)
-# dac=1: argmin-1=790526 (5.078086853 V)
-# dac=1: argmax-1=343273 (-3.452587128 V)
+# dac=0: argmin=774143 (4.765605927 V)
+# dac=0: argmax=688127 (3.124980927 V)
+# dac=1: argmin=790527 (5.078105927 V)
+# dac=1: argmax=343274 (-3.452568054 V)
+
 list_measurements = (
-    (0, 1, 4.765586853),
-    (0, 1, 3.124961853),
-    (1, 0, 5.078086853),
-    (1, 0, -3.452587128),
+    (0, 1, 4.765605927),
+    (0, 1, 3.124980927),
+    (1, 0, 5.078105927),
+    (1, 0, -3.452568054),
 )
 
 if __name__ == '__main__':
@@ -86,13 +87,16 @@ if __name__ == '__main__':
                     b_done, dict_changed_values = driver.sync_dac_set_all(dict_requested_values)
 
                     # Wait to settle
-                    time.sleep(0.03)
+                    if bFast:
+                      time.sleep(0.01)
+                    else:
+                      time.sleep(0.03)
 
                     # Read from ADC
                     fADC24_V = 0.0
                     MEASUREMENTS = 10
                     if bFast:
-                        MEASUREMENTS = 2
+                        MEASUREMENTS = 1
                     for i in range(MEASUREMENTS):
                         _iADC24, _fADC24_V = driver.sync_calib_read_ADC24()
                         fADC24_V += _fADC24_V
