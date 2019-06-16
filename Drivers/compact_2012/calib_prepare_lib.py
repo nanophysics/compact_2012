@@ -186,9 +186,16 @@ class CalibCorrectionData:
         data_diff = np.diff(data)
         argmax = np.argmax(data_diff)
         argmin = np.argmin(data_diff)
+
+        argmin = int(argmin)
+        argmax = int(argmax)
+
+        VERSATZ = 1
+        argmin += VERSATZ
+        argmax += VERSATZ
+
         print(f'argmax={argmax}, argmin={argmin}\n')
-        def print2(tag, offset):
-            index = int(offset)
+        def print2(tag, index):
             value_v = compact_2012_dac.getValueFromDAC20(index)
             self.f_comments.write(f'dac={iDac_index}: {tag}={index} ({value_v:0.9f} V)\n')
         print2('argmin', argmin)

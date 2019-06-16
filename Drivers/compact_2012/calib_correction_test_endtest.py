@@ -15,17 +15,25 @@ import compact_2012_driver
 bFast = True
 
 # Drivers\compact_2012\calibration_correction\20190606_01\calibration_correction.txt
-# dac=0: argmin=774143 (4.765605927 V)
-# dac=0: argmax=688127 (3.124980927 V)
-# dac=1: argmin=790527 (5.078105927 V)
-# dac=1: argmax=343274 (-3.452568054 V)
-
+# dac=0: argmin=774144 (4.765625000 V)
+# dac=0: argmax=688128 (3.125000000 V)
+# dac=1: argmin=790528 (5.078125000 V)
+# dac=1: argmax=343275 (-3.452548981 V)
 list_measurements = (
-    (0, 1, 4.765605927),
-    (0, 1, 3.124980927),
-    (1, 0, 5.078105927),
-    (1, 0, -3.452568054),
+    (0, 4.765625000),
+    (0, 3.125000000),
+    (1, 5.078125000),
+    (1, -3.452548981),
 )
+
+def getOtherDAC(iDac_index0):
+    assert 0 <= iDac_index0 < 10
+    dictDacFix = {}
+    DAC_COUNT = 10
+    for i in range(0, DAC_COUNT, 2):
+        dictDacFix[i] = i+1
+        dictDacFix[i+1] = i
+    return dictDacFix[iDac_index0]
 
 if __name__ == '__main__':
     driver = compact_2012_driver.Compact2012('COM10')
@@ -37,9 +45,10 @@ if __name__ == '__main__':
     if bFast:
         fDacIncrement_V = 0.5e-6
 
-    for iDacFix_index0, iDacDUT_index0, fDacMiddle_V in list_measurements:
+    for iDacDUT_index0, fDacMiddle_V in list_measurements:
+        iDacFix_index0 = getOtherDAC(iDacDUT_index0)
 
-        filename = f'Drivers/compact_2012/calibration_correction/{driver.compact_2012_serial}/calib_correction_test_endtest_out_DA{iDacFix_index0+1:02d}_{fDacMiddle_V:10.9f}.txt'
+        filename = f'Drivers/compact_2012/calibration_correction/{driver.compact_2012_serial}/calib_correction_test_endtest_out_DA{iDacDUT_index0+1:02d}_{fDacMiddle_V:10.9f}.txt'
         print(filename)
 
         with open(filename, 'w') as f:
