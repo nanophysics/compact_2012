@@ -22,77 +22,88 @@ if __name__ == '__main__':
     # dac=1: argmin=610303 (1.640605927 V)
     # dac=1: argmax=577534 (1.015586853 V)
 
-    iDacFix_index0 = 1
-    iDacDUT_index0 = 0
-    fDacMiddle_V = 5.703105927
     fDacPeak_V = 70e-6
     fDacIncrement_V = 0.5e-6
+    fDacIncrement_V = 20e-6
 
-    filename = f'Drivers/compact_2012/calibration_correction/{driver.compact_2012_serial}/calib_correction_test_endtest_out_DA{iDacFix_index0+1:02d}_{fDacMiddle_V:10.9f}.txt'
-    print(filename)
-
-    with open(filename, 'w') as f:
-        for do_lookup, use_str_dac in (
-                (True, True),
-                (False, True),
-                (False, False),
+    for iDacFix_index0, iDacDUT_index0, fDacMiddle_V in (
+                (0, 1, 5.703105927),
+                (0, 1, 4.765567780),
+                (1, 0, 4.101543427),
+                (1, 0, 4.765586853),
             ):
-            driver.ignore_str_dac12 = not use_str_dac
-            if not do_lookup:
-                driver.reset_calibration_lookup()
 
-            print(f'do_lookup={do_lookup} use_str_dac={use_str_dac} ', end='')
+        filename = f'Drivers/compact_2012/calibration_correction/{driver.compact_2012_serial}/calib_correction_test_endtest_out_DA{iDacFix_index0+1:02d}_{fDacMiddle_V:10.9f}.txt'
+        print(filename)
 
-            f.write(f'compact_2012_serial={driver.compact_2012_serial}\n')
-            f.write(f'do_lookup={do_lookup}\n')
-            f.write(f'use_str_dac={use_str_dac}\n')
-            f.write(f'iDacFix_index0={iDacFix_index0} (DA{iDacFix_index0+1})\n')
-            f.write(f'iDacDUT_index0={iDacDUT_index0} (DA{iDacDUT_index0+1})\n')
-            f.write(f'fDacMiddle_V={fDacMiddle_V}\n')
-            f.write(f'fDacPeak_V={fDacPeak_V}\n')
-            f.write(f'fDacIncrement_V={fDacIncrement_V}\n')
+        with open(filename, 'w') as f:
+            for indent, do_lookup, use_str_dac in (
+                    (0, True, True),
+                    (4, False, True),
+                    (8, False, False),
+                ):
+                driver.ignore_str_dac12 = not use_str_dac
+                if not do_lookup:
+                    driver.reset_calibration_lookup()
 
-            f.write('fADC24_V, fDac_V, fDac_error_V\n')
+                print(f'do_lookup={do_lookup} use_str_dac={use_str_dac} ', end='')
 
-            fDac_V = fDacMiddle_V-fDacPeak_V
-            while fDac_V < fDacMiddle_V+fDacPeak_V:
-                # Measure
-                print('.', end='')
-                dict_requested_values = {
-                    iDacFix_index0: {
-                        'f_DA_OUT_desired_V': fDacMiddle_V,
-                        'f_gain': 1.0,
-                    },
-                    iDacDUT_index0: {
-                        'f_DA_OUT_desired_V': fDac_V,
-                        'f_gain': 1.0,
+                f.write(f'compact_2012_serial={driver.compact_2012_serial}\n')
+                f.write(f'do_lookup={do_lookup}\n')
+                f.write(f'use_str_dac={use_str_dac}\n')
+                f.write(f'iDacFix_index0={iDacFix_index0} (DA{iDacFix_index0+1})\n')
+                f.write(f'iDacDUT_index0={iDacDUT_index0} (DA{iDacDUT_index0+1})\n')
+                f.write(f'fDacMiddle_V={fDacMiddle_V}\n')
+                f.write(f'fDacPeak_V={fDacPeak_V}\n')
+                f.write(f'fDacIncrement_V={fDacIncrement_V}\n')
+
+                f.write('\t'*indent)
+                f.write('\t'.join(('fADC24_V', 'fDac_set_V', 'fDac_get_V', 'fDac_get_error_V')))
+                f.write('\n')
+                f.flush()
+
+                fDac_V = fDacMiddle_V-fDacPeak_V
+                while fDac_V < fDacMiddle_V+fDacPeak_V:
+                    # Measure
+                    print('.', end='')
+                    dict_requested_values = {
+                        iDacFix_index0: {
+                            'f_DA_OUT_desired_V': fDacMiddle_V,
+                            'f_gain': 1.0,
+                        },
+                        iDacDUT_index0: {
+                            'f_DA_OUT_desired_V': fDac_V,
+                            'f_gain': 1.0,
+                        }
                     }
-                }
-                b_done, dict_changed_values = driver.sync_dac_set_all(dict_requested_values)
+                    b_done, dict_changed_values = driver.sync_dac_set_all(dict_requested_values)
 
-                # Wait to settle
-                time.sleep(0.03)
+                    # Wait to settle
+                    time.sleep(0.03)
 
-                # Read from ADC
-                fADC24_V = 0.0
-                MEASUREMENTS=10
-                for i in range(MEASUREMENTS):
-                    _iADC24, _fADC24_V = driver.sync_calib_read_ADC24()
-                    fADC24_V += _fADC24_V
+                    # Read from ADC
+                    fADC24_V = 0.0
+                    MEASUREMENTS=10
+                    for i in range(MEASUREMENTS):
+                        _iADC24, _fADC24_V = driver.sync_calib_read_ADC24()
+                        fADC24_V += _fADC24_V
 
-                fADC24_V /= MEASUREMENTS
-                fDac_error_V = fDac_V-fDacMiddle_V
-                if iDacFix_index0%2 == 0:
-                    fDac_error_V += fADC24_V
-                else:
-                    fDac_error_V -= fADC24_V
+                    fADC24_V /= MEASUREMENTS
+                    fDac_error_V = fDac_V-fDacMiddle_V
+                    if iDacFix_index0%2 == 0:
+                        fDac_error_V += fADC24_V
+                    else:
+                        fDac_error_V -= fADC24_V
 
-                f.write(f'{fADC24_V:12.9f}, {fDac_V:12.9f}, {fDac_error_V:12.9f}\n')
+                    f.write('\t'*indent)
+                    f.write(f'{fADC24_V:12.9f}\t{fDac_V:12.9f}\t{fDacMiddle_V+fADC24_V:12.9f}\t{fDac_error_V:12.9f}')
+                    f.write('\n')
+                    f.flush()
 
-                fDac_V += fDacIncrement_V
+                    fDac_V += fDacIncrement_V
 
-            f.write(f'\n')
-            f.flush()
-            print()
+                f.write(f'\n')
+                f.flush()
+                print()
 
     driver.close()
