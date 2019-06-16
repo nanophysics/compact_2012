@@ -12,26 +12,33 @@
 import time
 import compact_2012_driver
 
+bFast = True
+
+# Drivers\compact_2012\calibration_correction\20190606_01\calibration_correction.txt
+# dac=0: argmin=823296 (5.703125000 V)
+# dac=0: argmax=774142 (4.765586853 V)
+# dac=1: argmin=739328 (4.101562500 V)
+# dac=1: argmax=774143 (4.765605927 V)
+list_measurements = (
+    (0, 1, 5.703125000),
+    (0, 1, 4.765586853),
+    (1, 0, 4.101562500),
+    (1, 0, 4.765605927),
+)
+
+
+
 if __name__ == '__main__':
     driver = compact_2012_driver.Compact2012('COM10')
     driver.sync_set_geophone_led_threshold_percent_FS(10.0)
     driver.sync_calib_raw_init()
 
-    # dac=0: argmin=610303 (1.640605927 V)
-    # dac=0: argmax=577533 (1.015567780 V)
-    # dac=1: argmin=610303 (1.640605927 V)
-    # dac=1: argmax=577534 (1.015586853 V)
-
     fDacPeak_V = 70e-6
     fDacIncrement_V = 0.5e-6
-    fDacIncrement_V = 20e-6
+    if bFast:
+        fDacIncrement_V = 5e-6
 
-    for iDacFix_index0, iDacDUT_index0, fDacMiddle_V in (
-                (0, 1, 5.703105927),
-                (0, 1, 4.765567780),
-                (1, 0, 4.101543427),
-                (1, 0, 4.765586853),
-            ):
+    for iDacFix_index0, iDacDUT_index0, fDacMiddle_V in list_measurements:
 
         filename = f'Drivers/compact_2012/calibration_correction/{driver.compact_2012_serial}/calib_correction_test_endtest_out_DA{iDacFix_index0+1:02d}_{fDacMiddle_V:10.9f}.txt'
         print(filename)
@@ -83,7 +90,9 @@ if __name__ == '__main__':
 
                     # Read from ADC
                     fADC24_V = 0.0
-                    MEASUREMENTS=10
+                    MEASUREMENTS = 10
+                    if bFast:
+                        MEASUREMENTS = 2
                     for i in range(MEASUREMENTS):
                         _iADC24, _fADC24_V = driver.sync_calib_read_ADC24()
                         fADC24_V += _fADC24_V
@@ -91,12 +100,16 @@ if __name__ == '__main__':
                     fADC24_V /= MEASUREMENTS
                     fDac_error_V = fDac_V-fDacMiddle_V
                     if iDacFix_index0%2 == 0:
+                        # iDacFix_index0=0,2,4
                         fDac_error_V += fADC24_V
+                        fDac_set_V = fDacMiddle_V-fADC24_V
                     else:
+                        # iDacFix_index0=1,3,5
                         fDac_error_V -= fADC24_V
+                        fDac_set_V = fDacMiddle_V+fADC24_V
 
                     f.write('\t'*indent)
-                    f.write(f'{fADC24_V:12.9f}\t{fDac_V:12.9f}\t{fDacMiddle_V+fADC24_V:12.9f}\t{fDac_error_V:12.9f}')
+                    f.write(f'{fADC24_V:12.9f}\t{fDac_V:12.9f}\t{fDac_set_V:12.9f}\t{fDac_error_V:12.9f}')
                     f.write('\n')
                     f.flush()
 

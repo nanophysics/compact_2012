@@ -139,7 +139,7 @@ def prepare_by_serial(serial):
             assert STEPSIZE_EXPECTED_MEAN_MIN_V < mean_V < STEPSIZE_EXPECTED_MEAN_MAX_V, 'Expected a step of about 19uV but got {} V. Check the cabeling!'.format(mean_V)
             _stepsum_dac_12, _stepsize_dac_12, correction_dac_12 = find_solution(array_stepsize_V)
 
-            calib_correction_data.set_correction(iDacA_index=iDac_index_, data=correction_dac_12, iDacStart=0) # TODO: Or iDacStart=1 ?
+            calib_correction_data.set_correction(iDacA_index=iDac_index_, data=correction_dac_12, iDacStart=1)
 
         find_and_add_solution_for_dac(iDac_index_=iDacA_index+0, array_stepsize_V=array_stepsize_a_V)
         find_and_add_solution_for_dac(iDac_index_=iDacA_index+1, array_stepsize_V=array_stepsize_b_V)
@@ -167,6 +167,14 @@ class CalibCorrectionData:
         assert len(data.shape) == 1
         assert data.shape[0] <= micropython_portable.DAC20_MAX
         assert 0 <= iDacStart < micropython_portable.DAC20_MAX
+
+        iEnd = iDacStart + data.shape[0]
+        iOverlapAtEnd = iEnd - micropython_portable.DAC20_MAX
+        if iOverlapAtEnd >= 0:
+            # The last files overlaps by one step.
+            # We reduce it by one step.
+            assert iOverlapAtEnd <= 1
+            data = data[:-1]
 
         assert data.min() >= 0
         assert data.max() < micropython_portable.DAC12_MAX_CORRECTION_VALUE
