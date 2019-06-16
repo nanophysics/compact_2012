@@ -15,17 +15,6 @@ import compact_2012_driver
 bFast = True
 
 # Drivers\compact_2012\calibration_correction\20190606_01\calibration_correction.txt
-# dac=0: argmin=823296 (5.703125000 V)
-# dac=0: argmax=774142 (4.765586853 V)
-# dac=1: argmin=739328 (4.101562500 V)
-# dac=1: argmax=774143 (4.765605927 V)
-list_measurements = (
-    (0, 1, 5.703125000),
-    (0, 1, 4.765586853),
-    (1, 0, 4.101562500),
-    (1, 0, 4.765605927),
-)
-
 # dac=0: argmin-1=774142 (4.765586853 V)
 # dac=0: argmax-1=688126 (3.124961853 V)
 # dac=1: argmin-1=790526 (5.078086853 V)
@@ -45,7 +34,7 @@ if __name__ == '__main__':
     fDacPeak_V = 70e-6
     fDacIncrement_V = 0.5e-6
     if bFast:
-        fDacIncrement_V = 5e-6
+        fDacIncrement_V = 0.5e-6
 
     for iDacFix_index0, iDacDUT_index0, fDacMiddle_V in list_measurements:
 
@@ -59,7 +48,9 @@ if __name__ == '__main__':
                     (8, False, False),
                 ):
                 driver.ignore_str_dac12 = not use_str_dac
-                if not do_lookup:
+                if do_lookup:
+                    driver.load_calibration_lookup()
+                else:
                     driver.reset_calibration_lookup()
 
                 print(f'do_lookup={do_lookup} use_str_dac={use_str_dac} ', end='')
