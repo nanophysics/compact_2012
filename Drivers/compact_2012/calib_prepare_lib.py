@@ -180,15 +180,23 @@ class CalibCorrectionData:
         assert data.max() < micropython_portable.DAC12_MAX_CORRECTION_VALUE
 
         self.data[iDacA_index:iDacA_index+1, iDacStart:iDacStart+data.shape[0]] = data
-        argmax = np.argmax(data)
-        argmin = np.argmin(data)
-        print(f'argmax={argmax}, argmin={argmin}\n')
+
+        # import numpy as np
+        # R = np.array((2, 2, 4, 5, 0))
+        # np.diff(R)
+        # array([ 0,  2,  1, -5])
+        data_diff = np.diff(data)
+        argmax = np.argmax(data_diff)
+        argmin = np.argmin(data_diff)
+        # There is some other code using -1
+        VERSATZ = 1
+        print(f'argmax-1={argmax-VERSATZ}, argmin={argmin-VERSATZ}\n')
         def print2(tag, offset):
             index = int(iDacStart+offset)
             value_v = compact_2012_dac.getValueFromDAC20(index)
             self.f_comments.write(f'dac={iDacA_index}: {tag}={index} ({value_v:0.9f} V)\n')
-        print2('argmin', argmin)
-        print2('argmax', argmax)
+        print2('argmin-1', argmin-VERSATZ)
+        print2('argmax-1', argmax-VERSATZ)
         # self.f_comments.write(f'dac={iDacA_index}: argmax={iDacStart+argmax} ({compact_2012_dac.getValueFromDAC20(iDacStart+argmax):0.9f} V), argmin={iDacStart+argmin} ({compact_2012_dac.getValueFromDAC20(iDacStart+argmin):0.9f} V)\n')
 
     def save(self):
