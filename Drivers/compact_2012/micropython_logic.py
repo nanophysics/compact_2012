@@ -282,9 +282,9 @@ def calib_raw_measure(filename, serial, iDacA_index, iDacStart, iDacEnd, iSettle
                 f_status(iDac)
 
             def measure(iDAC20a, iDAC20b):
-                if iDAC20b >= DAC20_MAX:
+                if (iDAC20a >= DAC20_MAX) or (iDAC20b >= DAC20_MAX):
                     # For the very last measurment of a DAC, this will be one step out of the limit.
-                    iDAC20b = DAC20_MAX-1
+                    return
                 # Set output on DAC20 and DAC12
                 list_i_dac20 = [0]*DACS_COUNT
                 list_i_dac20[iDacA_index] = iDAC20a

@@ -1,3 +1,14 @@
+#
+# This file uses the 30bit DAC using the calibration_lookup.
+# To see if the calibration_lookup works fine, a error of the DAC20 is needed.
+# In 'Drivers\compact_2012\calibration_correction\20190606_01\calibration_correction.txt' is a list of the biggests errors ov every DAC20.
+# Use this script to sweep over such an error.
+#
+# Add such an error in 'fDacMiddle_V' below.
+# Start this script.
+# Copy 'Drivers/compact_2012/calib_correction_test_endtest_out.txt' into TODO OpenOffice Calc.
+#
+
 import time
 import compact_2012_driver
 
@@ -11,13 +22,16 @@ if __name__ == '__main__':
     # dac=1: argmin=610303 (1.640605927 V)
     # dac=1: argmax=577534 (1.015586853 V)
 
-    iDacFix_index = 1
-    iDacDUT_index = 0
-    fDacMiddle_V = 1.640605927
+    iDacFix_index0 = 1
+    iDacDUT_index0 = 0
+    fDacMiddle_V = 5.703105927
     fDacPeak_V = 70e-6
     fDacIncrement_V = 0.5e-6
 
-    with open(f'Drivers/compact_2012/calib_correction_test_endtest_out.txt', 'w') as f:
+    filename = f'Drivers/compact_2012/calibration_correction/{driver.compact_2012_serial}/calib_correction_test_endtest_out_DA{iDacFix_index0+1:02d}_{fDacMiddle_V:10.9f}.txt'
+    print(filename)
+
+    with open(filename, 'w') as f:
         for do_lookup, use_str_dac in (
                 (True, True),
                 (False, True),
@@ -29,10 +43,11 @@ if __name__ == '__main__':
 
             print(f'do_lookup={do_lookup} use_str_dac={use_str_dac} ', end='')
 
+            f.write(f'compact_2012_serial={driver.compact_2012_serial}\n')
             f.write(f'do_lookup={do_lookup}\n')
             f.write(f'use_str_dac={use_str_dac}\n')
-            f.write(f'iDacFix_index={iDacFix_index}\n')
-            f.write(f'iDacDUT_index={iDacDUT_index}\n')
+            f.write(f'iDacFix_index0={iDacFix_index0} (DA{iDacFix_index0+1})\n')
+            f.write(f'iDacDUT_index0={iDacDUT_index0} (DA{iDacDUT_index0+1})\n')
             f.write(f'fDacMiddle_V={fDacMiddle_V}\n')
             f.write(f'fDacPeak_V={fDacPeak_V}\n')
             f.write(f'fDacIncrement_V={fDacIncrement_V}\n')
@@ -44,11 +59,11 @@ if __name__ == '__main__':
                 # Measure
                 print('.', end='')
                 dict_requested_values = {
-                    iDacFix_index: {
+                    iDacFix_index0: {
                         'f_DA_OUT_desired_V': fDacMiddle_V,
                         'f_gain': 1.0,
                     },
-                    iDacDUT_index: {
+                    iDacDUT_index0: {
                         'f_DA_OUT_desired_V': fDac_V,
                         'f_gain': 1.0,
                     }
@@ -67,7 +82,7 @@ if __name__ == '__main__':
 
                 fADC24_V /= MEASUREMENTS
                 fDac_error_V = fDac_V-fDacMiddle_V
-                if iDacFix_index%2 == 0:
+                if iDacFix_index0%2 == 0:
                     fDac_error_V += fADC24_V
                 else:
                     fDac_error_V -= fADC24_V

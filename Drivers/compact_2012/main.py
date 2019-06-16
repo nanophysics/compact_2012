@@ -36,7 +36,8 @@ try:
   iSettleTime_s = SETTLE_TIME_S
 
   for iDacA_index in range(0, DACS_COUNT, 2):
-    for iDacStart in range(0, DAC20_MAX, iDacFileSize):
+    for iFileNum in range(CALIB_FILES_PER_DAC):
+      iDacStart = iFileNum*iDacFileSize
       # iDacA_index = 0
       # iDacStart=0x80000
       # iDacEnd=0x80000+100

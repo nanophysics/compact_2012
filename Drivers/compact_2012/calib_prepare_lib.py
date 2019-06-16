@@ -13,6 +13,17 @@ DIRECTORY_CALIBRATION_RAW_FULL=os.path.join(os.path.dirname(__file__), DIRECTORY
 DIRECTORY_CALIBRATION_CORRECTION='calibration_correction'
 DIRECTORY_CALIBRATION_CORRECTION_FULL=os.path.join(os.path.dirname(__file__), DIRECTORY_CALIBRATION_CORRECTION)
 
+def get_directory_calibration_correction_full_by_serial(serial):
+    directory_full = os.path.join(DIRECTORY_CALIBRATION_CORRECTION_FULL, serial)
+    if not os.path.exists(directory_full):
+        os.makedirs(directory_full)
+    return directory_full
+
+FILENAME_CALIBRATION_CORRECTION_NPZ = 'calibration_correction.npz'
+FILENAME_CALIBRATION_CORRECTION_TXT = 'calibration_correction.txt'
+
+CALIB_FILES_PER_DAC = 16
+
 #
 # Logic Peter to calculate 'calib_correction'.
 #
@@ -68,39 +79,83 @@ def find_solution(stepsize_V):
     print('Solution found with {:f}'.format(cutoff_frequency_found))
     return stepsum_dac_12, stepsize_dac_12, correction_dac_12
 
-def find_solution2(filename, calib_correction_data):
-    r = micropython_portable.CalibRawFileReader(filename)
-    list_step_a_V, list_step_b_V = r.values()
+STEPSIZE_EXPECTED_MEAN_MIN_V = 17e-6
+STEPSIZE_EXPECTED_MEAN_V = 19e-6
+STEPSIZE_EXPECTED_MEAN_MAX_V = 21e-6
 
-    stepsize_a_V = np.array(list_step_a_V)
-    correction_dac_12 = find_solution3(stepsize_a_V)
-    calib_correction_data.set_correction(iDacA_index=r.iDacA_index+0, data=correction_dac_12, iDacStart=r.iDacStart+1)
-
-    stepsize_b_V = np.array(list_step_b_V)
-    correction_dac_12 = find_solution3(stepsize_b_V)
-    calib_correction_data.set_correction(iDacA_index=r.iDacA_index+1, data=correction_dac_12, iDacStart=r.iDacStart+1)
-
-
-def find_solution3(stepsize_V):
+def find_solution3(stepsize_V, do_plot=True):
     mean_V = stepsize_V.mean()
-    assert 17e-6 < mean_V < 21e-6, 'Expected a step of about 19uV but got {} V. Check the cabeling!'.format(mean_V)
+    assert STEPSIZE_EXPECTED_MEAN_MIN_V < mean_V < STEPSIZE_EXPECTED_MEAN_MAX_V, 'Expected a step of about 19uV but got {} V. Check the cabeling!'.format(mean_V)
     stepsum_dac_12, stepsize_dac_12, correction_dac_12 = find_solution(stepsize_V)
 
-    plt.plot(correction_dac_12)
-    plt.plot(stepsum_dac_12)
-    plt.plot(stepsum_dac_12+correction_dac_12)
-    plt.plot(np.ones_like(stepsize_dac_12) * dac_12_limit_h_dac_12)
-    plt.plot(np.ones_like(stepsize_dac_12) * dac_12_mid_dac_12)
-    plt.plot(np.ones_like(stepsize_dac_12) * dac_12_limit_l_dc_12)
-    plt.show()
+    if do_plot:
+        plt.plot(correction_dac_12)
+        plt.plot(stepsum_dac_12)
+        plt.plot(stepsum_dac_12+correction_dac_12)
+        plt.plot(np.ones_like(stepsize_dac_12) * dac_12_limit_h_dac_12)
+        plt.plot(np.ones_like(stepsize_dac_12) * dac_12_mid_dac_12)
+        plt.plot(np.ones_like(stepsize_dac_12) * dac_12_limit_l_dc_12)
+        plt.show()
 
     return correction_dac_12
+
+
+def prepare_by_serial(serial):
+    '''
+      Reads all files for serial in 'calibration_raw'.
+      Calculates and write the correction-file in directory 'calibration_raw'.
+    '''
+    iDacFileSize = micropython_portable.DAC20_MAX//CALIB_FILES_PER_DAC
+
+    calib_correction_data = CalibCorrectionData(serial)
+    
+    for iDacA_index in range(0, micropython_portable.DACS_COUNT, 2):
+        # Fill default-value 19uV: Empty files will not introduce big steps.
+        array_stepsize_a_V = np.full(shape=[micropython_portable.DAC20_MAX], fill_value=STEPSIZE_EXPECTED_MEAN_V, dtype=np.float)
+        array_stepsize_b_V = np.full(shape=[micropython_portable.DAC20_MAX], fill_value=STEPSIZE_EXPECTED_MEAN_V, dtype=np.float)
+
+        for iFileNum in range(CALIB_FILES_PER_DAC):
+            iDacStart = iFileNum*iDacFileSize
+            filename = 'calib_raw_{}_dac{}-{}.txt'.format(serial, iDacA_index, iDacStart//iDacFileSize)
+            filenameFull = os.path.join(DIRECTORY_CALIBRATION_RAW_FULL, filename)
+            if not os.path.exists(filenameFull):
+                print('WARNING: File missing {}!'.format(filename))
+                continue
+
+            r = micropython_portable.CalibRawFileReader(filenameFull)
+
+            list_step_a_V, list_step_b_V = r.values()
+            assert iDacA_index == r.iDacA_index
+            assert iDacStart == r.iDacStart
+            assert len(list_step_a_V) == len(list_step_b_V)
+            assert iDacFileSize >= len(list_step_a_V)-1
+            assert iDacFileSize >= len(list_step_b_V)-1
+
+            array_stepsize_a_V[iDacStart:iDacStart+len(list_step_a_V)] = list_step_a_V
+            array_stepsize_b_V[iDacStart:iDacStart+len(list_step_b_V)] = list_step_b_V
+
+        def find_and_add_solution_for_dac(iDac_index_, array_stepsize_V):
+            mean_V = array_stepsize_V.mean()
+            assert STEPSIZE_EXPECTED_MEAN_MIN_V < mean_V < STEPSIZE_EXPECTED_MEAN_MAX_V, 'Expected a step of about 19uV but got {} V. Check the cabeling!'.format(mean_V)
+            _stepsum_dac_12, _stepsize_dac_12, correction_dac_12 = find_solution(array_stepsize_V)
+
+            calib_correction_data.set_correction(iDacA_index=iDac_index_, data=correction_dac_12, iDacStart=0) # TODO: Or iDacStart=1 ?
+
+        find_and_add_solution_for_dac(iDac_index_=iDacA_index+0, array_stepsize_V=array_stepsize_a_V)
+        find_and_add_solution_for_dac(iDac_index_=iDacA_index+1, array_stepsize_V=array_stepsize_b_V)
+
+    calib_correction_data.save()
 
 #
 # Classes to read and write 'calib_correction'
 #
 class CalibCorrectionData:
-    def __init__(self):
+    def __init__(self, serial):
+        self.serial = serial
+        directory = get_directory_calibration_correction_full_by_serial(serial)
+        self.filename_npz = os.path.join(directory, FILENAME_CALIBRATION_CORRECTION_NPZ)
+        self.filename_txt = os.path.join(directory, FILENAME_CALIBRATION_CORRECTION_TXT)
+
         self.f_comments = io.StringIO()
         self.data = np.zeros(shape=[micropython_portable.DACS_COUNT, micropython_portable.DAC20_MAX], dtype=np.uint16, order='C')
 
@@ -110,11 +165,11 @@ class CalibCorrectionData:
         '''
         assert 0 <= iDacA_index < micropython_portable.DACS_COUNT
         assert len(data.shape) == 1
-        assert 0 <= data.shape[0] < micropython_portable.DAC20_MAX
+        assert data.shape[0] <= micropython_portable.DAC20_MAX
         assert 0 <= iDacStart < micropython_portable.DAC20_MAX
 
-        assert data.min >= 0
-        assert data.max < micropython_portable.DAC12_MAX_CORRECTION_VALUE
+        assert data.min() >= 0
+        assert data.max() < micropython_portable.DAC12_MAX_CORRECTION_VALUE
 
         self.data[iDacA_index:iDacA_index+1, iDacStart:iDacStart+data.shape[0]] = data
         argmax = np.argmax(data)
@@ -128,16 +183,14 @@ class CalibCorrectionData:
         print2('argmax', argmax)
         # self.f_comments.write(f'dac={iDacA_index}: argmax={iDacStart+argmax} ({compact_2012_dac.getValueFromDAC20(iDacStart+argmax):0.9f} V), argmin={iDacStart+argmin} ({compact_2012_dac.getValueFromDAC20(iDacStart+argmin):0.9f} V)\n')
 
-    def save(self, filename):
-        np.savez_compressed(filename, data=self.data)
+    def save(self):
+        np.savez_compressed(self.filename_npz, data=self.data)
         # np.savez(filename, data=self.data)
-        assert filename.endswith('.npz')
-        filename_txt = filename.replace('.npz', '.txt')
-        with open(filename_txt, 'w') as f:
+        with open(self.filename_txt, 'w') as f:
             f.write(self.f_comments.getvalue())
 
-    def load(self, filename):
-        numpy_file = np.load(filename)
+    def load(self):
+        numpy_file = np.load(self.filename_npz)
         self.data = numpy_file['data']
         assert self.data.shape == (micropython_portable.DACS_COUNT, micropython_portable.DAC20_MAX)
 
@@ -152,20 +205,3 @@ class CalibCorrectionData:
         dac12_value = int(dac12_value)
         return dac12_value
 
-
-if __name__ == '__main__':
-    if False:
-        # random signal for testing
-        np.random.seed(0)
-        signallength = 1000
-        stepsize_V = np.random.randn(signallength) * 5e-6 + 19e-6
-
-        find_solution3(stepsize_V)
-
-    if True:
-        calib_correction_data = CalibCorrectionData()
-
-        filename = 'Drivers/compact_2012/calib_raw_dac0_2019-06-09a.txt'
-        find_solution2(filename, calib_correction_data)
-
-        calib_correction_data.save('Drivers/compact_2012/calib_correction_a.npz')

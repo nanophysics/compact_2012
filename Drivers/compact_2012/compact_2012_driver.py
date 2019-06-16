@@ -57,6 +57,7 @@ for subproject in ('compact_2012_mpfshell', 'compact_2012_pyserial'):
         raise Exception('The file "{}" is missing. You have git-clone the subproject "{}" too!'.format(filename_requirements, subproject))
     sys.path.insert(0, os.path.join(directory, subproject))
 
+import mp
 from mp.mpfexp import MpFileExplorer, RemoteIOError
 
 import compact_2012_dac
@@ -158,17 +159,20 @@ class Compact2012:
         self.i_pyboard_geophone_dac = 0
         self.f_pyboard_geophone_read_s = 0
 
-        self.load_calibration_lookup()
         self.fe = MpFileExplorer(str_port2, reset=True)
+        self.__sync_get_serial()
         self.__sync_init()
+        self.load_calibration_lookup()
 
     def close(self):
         self.save_values_to_file()
         self.fe.close()
 
     def load_calibration_lookup(self):
-        calib_correction_data = calib_prepare_lib.CalibCorrectionData()
-        calib_correction_data.load('Drivers/compact_2012/calib_correction_a.npz')
+        if self.compact_2012_serial is None:
+            return
+        calib_correction_data = calib_prepare_lib.CalibCorrectionData(self.compact_2012_serial)
+        calib_correction_data.load()
         self.__calibrationLookup = calib_correction_data.calibrationLookup
 
     def reset_calibration_lookup(self):
@@ -194,6 +198,15 @@ You can use this values when Labber crashes and you do not know how to go on.
 Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(SAVE_VALUES_TO_DISK_TIME_S))
             for obj_Dac in self.list_dacs:
                 f.write('DA{} {:8.8f} V     (range, jumper, {})\n'.format(obj_Dac.index+1, obj_Dac.f_value_V*obj_Dac.f_gain, obj_Dac.get_gain_string()))
+
+    def __sync_get_serial(self):
+        self.compact_2012_serial = None
+        try:
+            self.fe.exec('import config_serial')
+            serial = self.fe.eval('config_serial.SERIAL')
+            self.compact_2012_serial = serial.decode('utf-8')
+        except mp.pyboard.PyboardError as e:
+            print('Could not read config_serial.py on the Compact_2012 pyboard. Do not use calibration data! ({})'.format(e))
 
     def __sync_init(self):
         for filename in ('micropython_ads1219.py', 'micropython_portable.py', 'micropython_logic.py'):
@@ -315,7 +328,7 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
             str_dac12 = '0'*DACS_COUNT*DAC12_NIBBLES
         s_py_command = 'set_dac("{}", "{}")'.format(str_dac20, str_dac12)
         self.obj_time_span_set_dac.start()
-        
+
         str_status = self.fe.eval(s_py_command)
 
         self.obj_time_span_set_dac.end()
