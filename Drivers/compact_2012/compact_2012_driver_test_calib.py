@@ -7,14 +7,14 @@ if __name__ == '__main__':
 
     driver.sync_calib_raw_init()
 
-    iDacA_index = 0
+    iDac_index = 0
     iDacStart=0x80000
     iDacEnd=0x80000+1000
     iDacEnd=0xFFFFF
     COUNT = iDacEnd-iDacStart
-    filename = 'calib_raw_dac{}_2019-06-08.txt'.format(iDacA_index)
+    filename = 'calib_raw_dac{}_2019-06-08.txt'.format(iDac_index)
     start = time.time()
-    driver.sync_calib_raw_measure(filename, iDacA_index=iDacA_index, iDacStart=iDacStart, iDacEnd=iDacEnd)
+    driver.sync_calib_raw_measure(filename, iDac_index=iDac_index, iDacStart=iDacStart, iDacEnd=iDacEnd)
     time_avg_measurement_s = (time.time()-start)/COUNT/2.0
     time_total_s = 2**20 * 10 * time_avg_measurement_s
     print('Average time for {}: {}ms. Total {}d'.format(COUNT, time_avg_measurement_s*1000.0, time_total_s/3600.0/24.0))

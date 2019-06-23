@@ -246,16 +246,20 @@ def calib_raw_init():
     adc.set_gain(ADS1219.GAIN_1X)  # GAIN_1X, GAIN_4X
     adc.set_data_rate(ADS1219.DR_20_SPS)
 
+def calib_set_mux(iDac_index0):
+    i = iDac_index0//2
+    p_CALIB_MUX_A0.value(i & 0x01)
+    p_CALIB_MUX_A1.value(i & 0x02)
+    p_CALIB_MUX_A2.value(i & 0x04)
 
-def calib_read_ADC24():
+def calib_read_ADC24(iDac_index):
+    calib_set_mux(iDac_index)
+
     iADC24 = adc.read_data_signed()
     return str(iADC24)
 
-def calib_raw_measure(filename, serial, iDacA_index, iDacStart, iDacEnd, iSettleTime_s=0, f_status=None):
-    # Mux auf channel 1 schalten, spaeter erweitern auf total 5 channel
-    p_CALIB_MUX_A0.value(0)
-    p_CALIB_MUX_A1.value(0)
-    p_CALIB_MUX_A2.value(0)
+def calib_raw_measure(filename, serial, iDac_index, iDacStart, iDacEnd, iSettleTime_s=0, f_status=None):
+    calib_set_mux(iDac_index)
 
     gain_AD8428 = 2000.0
     i_mittelwert = 3
@@ -267,14 +271,14 @@ def calib_raw_measure(filename, serial, iDacA_index, iDacStart, iDacEnd, iSettle
     # TODO: Remove following line
     MEASUREMENT_COUNT = 1
 
-    # 'iDacA_index' must even and in (0, 2, .. 8)
-    assert 0 <= iDacA_index < DACS_COUNT-1
-    assert iDacA_index % 2 == 0
+    # 'iDac_index' must even and in (0, 2, .. 8)
+    assert 0 <= iDac_index < DACS_COUNT-1
+    assert iDac_index % 2 == 0
 
     # We measure differences: We have to measure one step more (See: https://en.wikipedia.org/wiki/Off-by-one_error#Fencepost_error)
     iDacEnd += 1
 
-    w = CalibRawFileWriter(filename, serial, iDacStart, iDacA_index)
+    w = CalibRawFileWriter(filename, serial, iDacStart, iDac_index)
 
     try:
         for iDac in range(iDacStart, iDacEnd):
@@ -287,8 +291,8 @@ def calib_raw_measure(filename, serial, iDacA_index, iDacStart, iDacEnd, iSettle
                     return
                 # Set output on DAC20 and DAC12
                 list_i_dac20 = [0]*DACS_COUNT
-                list_i_dac20[iDacA_index] = iDAC20a
-                list_i_dac20[iDacA_index+1] = iDAC20b
+                list_i_dac20[iDac_index] = iDAC20a
+                list_i_dac20[iDac_index+1] = iDAC20b
                 str_dac20 = getHexStringFromListInt20(list_i_dac20)
                 set_dac(str_dac20, str_dac12)
 

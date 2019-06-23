@@ -21,8 +21,9 @@ def get_directory_calibration_correction_full_by_serial(serial):
 
 FILENAME_CALIBRATION_CORRECTION_NPZ = 'calibration_correction.npz'
 FILENAME_CALIBRATION_CORRECTION_TXT = 'calibration_correction.txt'
+FILENAME_CALIB_RAW_TEMPLATE = 'calib_raw_{}_dac{}-{:02d}.txt'
 
-CALIB_FILES_PER_DAC = 16
+CALIB_FILES_PER_DAC = 32
 
 #
 # Logic Peter to calculate 'calib_correction'.
@@ -116,7 +117,7 @@ def prepare_by_serial(serial):
 
         for iFileNum in range(CALIB_FILES_PER_DAC):
             iDacStart = iFileNum*iDacFileSize
-            filename = 'calib_raw_{}_dac{}-{}.txt'.format(serial, iDacA_index, iDacStart//iDacFileSize)
+            filename = FILENAME_CALIB_RAW_TEMPLATE.format(serial, iDacA_index, iDacStart//iDacFileSize)
             filenameFull = os.path.join(DIRECTORY_CALIBRATION_RAW_FULL, filename)
             if not os.path.exists(filenameFull):
                 print('WARNING: File missing {}!'.format(filename))

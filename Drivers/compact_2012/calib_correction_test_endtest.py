@@ -12,7 +12,7 @@
 import time
 import compact_2012_driver
 
-bFast = True
+bFast = False
 
 # Drivers\compact_2012\calibration_correction\20190606_01\calibration_correction.txt
 # dac=0: argmin=774144 (4.765625000 V)
@@ -24,6 +24,63 @@ list_measurements = (
     (0, 3.125000000),
     (1, 5.078125000),
     (1, -3.452548981),
+)
+
+# Drivers\compact_2012\calibration_correction\20190606_02\calibration_correction.txt
+# dac=0: argmin=774144 (4.765625000 V)
+# dac=0: argmax=688128 (3.125000000 V)
+# dac=1: argmin=790528 (5.078125000 V)
+# dac=1: argmax=567424 (0.822753906 V)
+# dac=2: argmin=790528 (5.078125000 V)
+# dac=2: argmax=688128 (3.125000000 V)
+# dac=3: argmin=788480 (5.039062500 V)
+# dac=3: argmax=352384 (-3.278808594 V)
+# dac=4: argmin=544768 (0.390625000 V)
+# dac=4: argmax=557056 (0.625000000 V)
+# dac=5: argmin=544768 (0.390625000 V)
+# dac=5: argmax=557056 (0.625000000 V)
+# dac=6: argmin=544768 (0.390625000 V)
+# dac=6: argmax=510080 (-0.270996094 V)
+# dac=7: argmin=544768 (0.390625000 V)
+# dac=7: argmax=557056 (0.625000000 V)
+# dac=8: argmin=544768 (0.390625000 V)
+# dac=8: argmax=495744 (-0.544433594 V)
+# dac=9: argmin=544768 (0.390625000 V)
+# dac=9: argmax=522368 (-0.036621094 V)
+list_measurements = (
+    (0, 4.765625000),
+    (0, 3.125000000),
+    (1, 5.078125000),
+    (1, 0.822753906),
+    (2, 5.078125000),
+    (2, 3.125000000),
+    (3, 5.039062500),
+    (3, -3.278808594),
+    (4, 0.390625000),
+    (4, 0.625000000),
+    (5, 0.390625000),
+    (5, 0.625000000),
+    (6, 0.390625000),
+    (6, -0.270996094),
+    (7, 0.390625000),
+    (7, 0.625000000),
+    (8, 0.390625000),
+    (8, -0.544433594),
+    (9, 0.390625000),
+    (9, -0.036621094),
+)
+
+list_measurements = (
+    (0, 4.765625000),
+    # (0, 3.125000000),
+    # (1, 5.078125000),
+    # (1, 0.822753906),
+    # (2, 5.078125000),
+    # (2, 3.125000000),
+    # (3, 5.039062500),
+    # (3, -3.278808594),
+    # (4, 0.390625000),
+    # (4, 0.625000000),
 )
 
 def getOtherDAC(iDac_index0):
@@ -43,7 +100,8 @@ if __name__ == '__main__':
     fDacPeak_V = 70e-6
     fDacIncrement_V = 0.5e-6
     if bFast:
-        fDacIncrement_V = 0.5e-6
+        fDacPeak_V = 25e-6
+        fDacIncrement_V = 1.0e-6
 
     for iDacDUT_index0, fDacMiddle_V in list_measurements:
         iDacFix_index0 = getOtherDAC(iDacDUT_index0)
@@ -79,8 +137,8 @@ if __name__ == '__main__':
                 f.write('\n')
                 f.flush()
 
-                fDac_V = fDacMiddle_V-fDacPeak_V
-                while fDac_V < fDacMiddle_V+fDacPeak_V:
+                fDac_set_V = fDacMiddle_V-fDacPeak_V
+                while fDac_set_V < fDacMiddle_V+fDacPeak_V:
                     # Measure
                     print('.', end='')
                     dict_requested_values = {
@@ -89,7 +147,7 @@ if __name__ == '__main__':
                             'f_gain': 1.0,
                         },
                         iDacDUT_index0: {
-                            'f_DA_OUT_desired_V': fDac_V,
+                            'f_DA_OUT_desired_V': fDac_set_V,
                             'f_gain': 1.0,
                         }
                     }
@@ -107,26 +165,26 @@ if __name__ == '__main__':
                     if bFast:
                         MEASUREMENTS = 1
                     for i in range(MEASUREMENTS):
-                        _iADC24, _fADC24_V = driver.sync_calib_read_ADC24()
+                        _iADC24, _fADC24_V = driver.sync_calib_read_ADC24(iDacDUT_index0)
                         fADC24_V += _fADC24_V
 
                     fADC24_V /= MEASUREMENTS
-                    fDac_error_V = fDac_V-fDacMiddle_V
+                    fDac_error_V = fDac_set_V-fDacMiddle_V
                     if iDacFix_index0%2 == 0:
                         # iDacFix_index0=0,2,4
-                        fDac_error_V += fADC24_V
-                        fDac_set_V = fDacMiddle_V-fADC24_V
+                        fDac_error_V -= fADC24_V
+                        fDac_get_V = fDacMiddle_V+fADC24_V
                     else:
                         # iDacFix_index0=1,3,5
-                        fDac_error_V -= fADC24_V
-                        fDac_set_V = fDacMiddle_V+fADC24_V
+                        fDac_error_V += fADC24_V
+                        fDac_get_V = fDacMiddle_V-fADC24_V
 
                     f.write('\t'*indent)
-                    f.write(f'{fADC24_V:12.9f}\t{fDac_V:12.9f}\t{fDac_set_V:12.9f}\t{fDac_error_V:12.9f}')
+                    f.write(f'{fADC24_V:12.9f}\t{fDac_set_V:12.9f}\t{fDac_get_V:12.9f}\t{fDac_error_V:12.9f}')
                     f.write('\n')
                     f.flush()
 
-                    fDac_V += fDacIncrement_V
+                    fDac_set_V += fDacIncrement_V
 
                 f.write(f'\n')
                 f.flush()

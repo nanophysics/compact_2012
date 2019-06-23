@@ -15,7 +15,8 @@ for filename in ('config_serial.py', 'micropython_ads1219.py', 'micropython_port
   execfile(filename)
 
 
-CALIB_FILES_PER_DAC = 16
+CALIB_FILES_PER_DAC = 32
+FILENAME_CALIB_RAW_TEMPLATE = 'calib_raw_{}_dac{}-{:02d}.txt'
 
 try:
   timer_blink.callback(None)
@@ -42,7 +43,7 @@ try:
       # iDacStart=0x80000
       # iDacEnd=0x80000+100
       # iDacEnd=0xFFFFF
-      filename = 'calib_raw_{}_dac{}-{}.txt'.format(SERIAL, iDacA_index, iDacStart//iDacFileSize)
+      filename = FILENAME_CALIB_RAW_TEMPLATE.format(SERIAL, iDacA_index, iDacStart//iDacFileSize)
       if filename in list_files:
         print('{} exists. Skipped'.format(filename))
         iSettleTime_s = SETTLE_TIME_S

@@ -192,11 +192,11 @@ class CalibRawFileReader:
         try:
             while True:
                 step_b_V = get_step_V()
-                tmp_ = step_a_V - step_b_V
+                tmp_ = step_b_V - step_a_V
                 # Assign below. This make shure, that both array have the same size
 
                 step_a_V = get_step_V()
-                list_step_a_V.append(step_a_V - step_b_V)
+                list_step_a_V.append(step_b_V - step_a_V)
 
                 list_step_b_V.append(tmp_)
         except StopIteration:
