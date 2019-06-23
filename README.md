@@ -28,6 +28,8 @@ The software used to use this extensions uses the prefix `calib_`.
   - Green LED steady: Done
   - Red LED: Error
 
+  The progress may be observed by opening a putty-console to COMxx.
+
 - Wait for "Green LED steady'.
 - Remove SD-Card and copy file to the folder `calibration_raw`.
 
