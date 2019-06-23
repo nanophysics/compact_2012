@@ -258,6 +258,23 @@ def calib_read_ADC24(iDac_index):
     iADC24 = adc.read_data_signed()
     return str(iADC24)
 
+def calib_set_DAC12(iDAC12_index, iDAC12_value):
+    '''
+    All DAC20 and DAC12 will be set to zero.
+    But 'iDAC12_index' will be set to 'iDAC12_value'.
+    '''
+    assert 0 <= iDAC12_index < DACS_COUNT
+    assert 0 <= iDAC12_value < DAC12_MAX
+
+    list_i_dac12 = [0]*DACS_COUNT
+    list_i_dac12[iDAC12_index] = iDAC12_value
+    str_dac12 = getHexStringFromListInt12(list_i_dac12)
+
+    list_i_dac20 = [0]*DACS_COUNT
+    str_dac20 = getHexStringFromListInt20(list_i_dac20)
+
+    set_dac(str_dac20, str_dac12)
+
 def calib_raw_measure(filename, serial, iDac_index, iDacStart, iDacEnd, iSettleTime_s=0, f_status=None):
     calib_set_mux(iDac_index)
 

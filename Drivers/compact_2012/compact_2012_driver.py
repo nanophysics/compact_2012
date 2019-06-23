@@ -172,8 +172,7 @@ class Compact2012:
         if self.compact_2012_serial is None:
             return
         calib_correction_data = calib_prepare_lib.CalibCorrectionData(self.compact_2012_serial)
-        calib_correction_data.load()
-        self.__calibrationLookup = calib_correction_data.calibrationLookup
+        self.__calibrationLookup = calib_correction_data.load()
 
     def reset_calibration_lookup(self):
         self.__calibrationLookup = None

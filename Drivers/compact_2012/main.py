@@ -16,7 +16,9 @@ for filename in ('config_serial.py', 'micropython_ads1219.py', 'micropython_port
 
 
 CALIB_FILES_PER_DAC = 32
+FILENAME_TMP = 'tmp.txt'
 FILENAME_CALIB_RAW_TEMPLATE = 'calib_raw_{}_dac{}-{:02d}.txt'
+FILENAME_CALIB_RAW_TEMPLATE_DAC12 = 'calib_raw_{}_gain_DAC12.txt'
 
 try:
   timer_blink.callback(None)
@@ -33,6 +35,40 @@ try:
 
   list_files = uos.listdir()
 
+  # Measure DAC12 gain
+  filename = FILENAME_CALIB_RAW_TEMPLATE_DAC12.format(SERIAL)
+  if filename in list_files:
+    print('{} exists. Skipped'.format(filename))
+  else:
+    print('{} measureing...'.format(filename))
+    calib_set_DAC12(iDAC12_index=0, iDAC12_value=0)
+    utime.sleep(3.0)
+  
+    I_SETTLE_TIME_DAC12_S = 0.03
+    I_MEASUREMENT_COUNT_DAC12 = 20
+    with open(FILENAME_TMP, 'w') as f:
+      for iDAC_index in range(DACS_COUNT):
+        calib_set_mux(iDAC_index)
+
+        for iMeasurement in range(I_MEASUREMENT_COUNT_DAC12):
+          if iMeasurement%4 == 0:
+            p_LED_GREEN_out.on()
+          else:
+            p_LED_GREEN_out.off()
+          for iDAC12_value in (0, DAC12_MAX-1):
+            # Set DAC12
+            calib_set_DAC12(iDAC_index, iDAC12_value)
+            utime.sleep(I_SETTLE_TIME_DAC12_S)
+
+            # Read from ADC24
+            iADC24_signed = adc.read_data_signed()
+            f.write('{}\t{}\t{}\n'.format(iDAC_index, iDAC12_value, iADC24_signed))
+
+
+    uos.rename(FILENAME_TMP, filename)
+
+
+  # Measure DAC20 steps (very slow)
   SETTLE_TIME_S = 10
   iSettleTime_s = SETTLE_TIME_S
 
@@ -48,8 +84,6 @@ try:
         print('{} exists. Skipped'.format(filename))
         iSettleTime_s = SETTLE_TIME_S
         continue
-
-      FILENAME_TMP = 'tmp.txt'
 
       def status(iDac):
         '''

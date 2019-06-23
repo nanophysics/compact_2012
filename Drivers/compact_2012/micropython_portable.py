@@ -3,6 +3,9 @@
 '''
 import binascii
 
+# Analog limit of differential amplifier
+fADC24_LIMIT_V = 0.7e-3
+
 # DACS in compact2012
 DACS_COUNT = 10
 # Maximal output
@@ -128,6 +131,10 @@ def convert_ADC24_signed_to_V(iADC24_signed):
     factor = 3.3/(2.0**23)/gain_AD8428
 
     fADC24 = iADC24_signed*factor
+
+    if not (-fADC24_LIMIT_V < fADC24 < fADC24_LIMIT_V):
+        raise Exception('fADC24={:12.9f} but should be between {:12.9f} and {:12.9f}.'.format(fADC24, -fADC24_LIMIT_V, fADC24_LIMIT_V))
+
     return fADC24
 
 CALIB_RAW_FILETYPE='CALIB_RAW_FILETYPE'
