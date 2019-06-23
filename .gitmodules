@@ -1,6 +1,6 @@
 [submodule "Drivers/compact_2012/compact_2012_pyserial"]
 	path = Drivers/compact_2012/compact_2012_pyserial
-	url = https://github.com/tempstabilizer2018group/compact_2012_pyserial.git
+	url = https://github.com/nanophysics/compact_2012_pyserial.git
 [submodule "Drivers/compact_2012/compact_2012_mpfshell"]
 	path = Drivers/compact_2012/compact_2012_mpfshell
-	url = https://github.com/tempstabilizer2018group/compact_2012_mpfshell.git
+	url = https://github.com/nanophysics/compact_2012_mpfshell.git
