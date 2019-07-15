@@ -285,8 +285,6 @@ def calib_raw_measure(filename, serial, iDac_index, iDacStart, iDacEnd, iSettleT
     list_i_dac12 = [0]*DACS_COUNT
     str_dac12 = getHexStringFromListInt12(list_i_dac12)
     MEASUREMENT_COUNT = 3
-    # TODO: Remove following line
-    MEASUREMENT_COUNT = 1
 
     # 'iDac_index' must even and in (0, 2, .. 8)
     assert 0 <= iDac_index < DACS_COUNT-1
