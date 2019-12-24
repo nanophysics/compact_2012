@@ -4,7 +4,7 @@ import calib_prepare_lib
 
 if __name__ == '__main__':
     if True:
-        calib_prepare_lib.prepare_by_serial(serial='20190606_2')
+        calib_prepare_lib.prepare_by_serial(serial='20190606_02')
 
     if False:
         # random signal for testing
