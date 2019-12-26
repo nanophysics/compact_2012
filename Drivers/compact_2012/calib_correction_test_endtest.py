@@ -73,6 +73,7 @@ list_measurements = (
 list_measurements = (
     (0, 3.125000000),
     (1, 0.822753906),
+    (3, 5.078125000),
     (6, -0.270996094),
     (9, -0.036621094),
 )
@@ -87,7 +88,7 @@ def getOtherDAC(iDac_index0):
     return dictDacFix[iDac_index0]
 
 if __name__ == '__main__':
-    driver = compact_2012_driver.Compact2012('COM10')
+    driver = compact_2012_driver.Compact2012('COM4')
     driver.sync_set_geophone_led_threshold_percent_FS(10.0)
     driver.sync_calib_raw_init()
 
@@ -100,7 +101,7 @@ if __name__ == '__main__':
     for iDacDUT_index0, fDacMiddle_V in list_measurements:
         iDacFix_index0 = getOtherDAC(iDacDUT_index0)
 
-        filename = f'Drivers/compact_2012/calibration_correction/{driver.compact_2012_serial}/calib_correction_test_endtest_out_DA{iDacDUT_index0+1:02d}_{fDacMiddle_V:10.9f}.txt'
+        filename = f'calibration_correction/{driver.compact_2012_serial}/calib_correction_test_endtest_out_DA{iDacDUT_index0+1:02d}_{fDacMiddle_V:10.9f}.txt'
         print(filename)
 
         with open(filename, 'w') as f:
