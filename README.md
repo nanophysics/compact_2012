@@ -35,10 +35,11 @@ The software used to use this extensions uses the prefix `calib_`.
 
 ### `calib_prepare_`: Run calibration algorithmus
 
-- Place files into folder `calibration_raw`.
+- Place files into folder `compact_2012\calibration_raw`.
 - Add serial number into `calib_prepare_run.py`.
 - Run `calib_prepare_run.py`
 - Add the resulting files in `calibration_correction\20190606_99\xx` to git.
+- Update serial port in `calib_correction_test_endtest.py` (compact_2012_driver.Compact2012('COM?'))
 - Run `calib_correction_test_endtest.py`.
 - Take `calib_correction_test_endtest_out.txt` and update OpenOffice Calc TODO and verify result.
 - Trash `calib_raw_`-files.
