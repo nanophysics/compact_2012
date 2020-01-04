@@ -10,7 +10,7 @@ DA9, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0139314515135995
 DA10, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0065148670817052
 
 dac=0: argmin=790528 (5.078125000 V)
-dac=0: argmax=688128 (3.125000000 V)
+dac=0: argmax=622592 (1.875000000 V)
 dac=1: argmin=790528 (5.078125000 V)
 dac=1: argmax=688128 (3.125000000 V)
 dac=2: argmin=788480 (5.039062500 V)
