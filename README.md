@@ -37,7 +37,7 @@ The software used to use this extensions uses the prefix `calib_`.
 
 - Place files into folder `compact_2012\calibration_raw`.
 - Add serial number into `calib_prepare_run.py`.
-- Run `calib_prepare_run.py`
+- Run `calib_prepare_run.py`. This could take a while.
 - Add the resulting files in `calibration_correction\20190606_99\xx` to git.
 - Update serial port in `calib_correction_test_endtest.py` (compact_2012_driver.Compact2012('COM?'))
 - Run `calib_correction_test_endtest.py`.

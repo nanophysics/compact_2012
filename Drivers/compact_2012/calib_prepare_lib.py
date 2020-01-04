@@ -38,7 +38,7 @@ dac_12_limit_l_dac_12 = 0
 def highpassfilter(inputarray, cutoff_frequency = 0.00001):
     # Highpassfilter https://tomroelandts.com/articles/how-to-create-a-simple-high-pass-filter
     # https://fiiir.com/
-    N = 100001    # Filter length, must be odd. At least about  2 / cutoff_frequency.
+    N = 10001    # Filter length, must be odd. At least about  2 / cutoff_frequency.
     print('calculaing highpassfilter, filter taps {:d}, can take a while'.format(N))
     h = np.sinc(2 * cutoff_frequency * (np.arange(N) - (N - 1) / 2)) # Compute sinc filter.
     h *= np.blackman(N) # Apply window.
@@ -62,7 +62,7 @@ def find_solution(stepsize_V, f_dac_12_int_per_V):
     cutoff_frequency_found = 0.0
     # We have to highpass filter stepsum_dac_12 as we only have a limited dac_12 range and we only want to smooth. We do not correct gain, offset or linearity of the dac_20.
     # We choose the cutoff_frequency as low as possible. 
-    for cutoff_frequency in  np.logspace(-5, -3, 10, endpoint=True) * 2.0:
+    for cutoff_frequency in  np.logspace(-3, -1, 10, endpoint=True): # cutoff_frequency 0.001 seams to be a good compromise, 2020-01-04 Peter
         correction_dac_12 = np.around(-highpassfilter(stepsum_dac_12, cutoff_frequency)+dac_12_mid_dac_12).astype(int)
         correction_dac_12_cliped = np.clip(correction_dac_12, a_min = dac_12_limit_l_dac_12, a_max = dac_12_limit_h_dac_12)
         if (correction_dac_12 == correction_dac_12_cliped).all(): # ok, in usable range
