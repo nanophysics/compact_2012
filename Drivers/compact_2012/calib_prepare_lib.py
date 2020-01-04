@@ -32,8 +32,8 @@ CALIB_FILES_PER_DAC = 32
 
 F_TOLERANCE_GAIN = 0.2
 
-dac_12_mid_dac_12 = 2 ** compact_2012_dac.dac_12_bit * 3 / 8
-dac_12_limit_l_dc_12 = 0
+dac_12_mid_dac_12 = 2 ** compact_2012_dac.dac_12_bit * 3 / 8 # 2/8 of the dac_12 range is used to correct the nominal step. The nominal value for the correction of the step deviation is set to 1/2 - (2/8) / 2 = 3/8
+dac_12_limit_l_dac_12 = 0
 
 def highpassfilter(inputarray, cutoff_frequency = 0.001):
     # Highpassfilter https://tomroelandts.com/articles/how-to-create-a-simple-high-pass-filter
@@ -50,17 +50,19 @@ def highpassfilter(inputarray, cutoff_frequency = 0.001):
     return inputarray_filtered
 
 def find_solution(stepsize_V, f_dac_12_int_per_V):
-    stepsize_dac_12 = stepsize_V * f_dac_12_int_per_V
+    stepsize_dac_12 = stepsize_V * f_dac_12_int_per_V # steps of dac_20 in units of dac_12
     median_step_size_int = np.median(stepsize_dac_12)
     dac_12_limit_h_dac_12 = 2 ** compact_2012_dac.dac_12_bit - median_step_size_int
     stepsize_deviation_dac_12 = stepsize_dac_12 - np.median(stepsize_dac_12) # we only have to correct for the offset from the theoretical step value
-    stepsum_dac_12 = np.cumsum(stepsize_deviation_dac_12)
+    stepsum_dac_12 = np.cumsum(stepsize_deviation_dac_12) # the correction value used for dac_12 is the sum of the deviation of the steps
 
     solution_found = False
     cutoff_frequency_found = 0.0
+    # We have to highpass filter stepsum_dac_12 as we only have a limited dac_12 range and we only want to smooth. We do not correct gain, offset or linearity of the dac_20.
+    # We choose the cutoff_frequency as low as possible. 
     for cutoff_frequency in np.logspace(-3, 2, 30, endpoint=True) *0.001:
         correction_dac_12 = np.around(-highpassfilter(stepsum_dac_12, cutoff_frequency)+dac_12_mid_dac_12).astype(int)
-        correction_dac_12_cliped = np.clip(correction_dac_12, a_min = dac_12_limit_l_dc_12, a_max = dac_12_limit_h_dac_12)
+        correction_dac_12_cliped = np.clip(correction_dac_12, a_min = dac_12_limit_l_dac_12, a_max = dac_12_limit_h_dac_12)
         if (correction_dac_12 == correction_dac_12_cliped).all(): # ok, in usable range
             solution_found = True
             cutoff_frequency_found = cutoff_frequency
@@ -86,7 +88,7 @@ def find_solution3(stepsize_V, do_plot=True):
         plt.plot(stepsum_dac_12+correction_dac_12)
         plt.plot(np.ones_like(stepsize_dac_12) * dac_12_limit_h_dac_12)
         plt.plot(np.ones_like(stepsize_dac_12) * dac_12_mid_dac_12)
-        plt.plot(np.ones_like(stepsize_dac_12) * dac_12_limit_l_dc_12)
+        plt.plot(np.ones_like(stepsize_dac_12) * dac_12_limit_l_dac_12)
         plt.show()
 
     return correction_dac_12

@@ -72,14 +72,14 @@ def getDAC20DAC12IntFromValue(value_plus_min_v, calibrationLookup=None, iDac_ind
 
     if calibrationLookup is not None:
         # calibrationLookup(): This function returns a DAC12 offset for every 'dac20_value'.
-        f_dac_12_int_per_V, dac12_correctur = calibrationLookup(iDac_index, dac20_value)
-        assert dac12_correctur < DAC12_MAX_CORRECTION_VALUE
+        f_dac_12_int_per_V, dac12_correction = calibrationLookup(iDac_index, dac20_value)
+        assert dac12_correction < DAC12_MAX_CORRECTION_VALUE
     else:
-        dac12_correctur = 0
+        dac12_correction = 0
         f_dac_12_int_per_V = f_fallback_dac_12_int_per_V
 
     f_dac12_v = value_plus_min_v - getValueFromDAC20(dac20_value)
-    dac12_value = f_dac12_v * f_dac_12_int_per_V + dac12_correctur
+    dac12_value = f_dac12_v * f_dac_12_int_per_V + dac12_correction
     dac12_value = int(dac12_value)
     if dac12_value < 0:
         print('WARNING - strange calibration data! Expected "dac12_value>=0" but got {}'.format(dac12_value))
