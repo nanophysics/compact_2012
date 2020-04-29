@@ -51,14 +51,11 @@ logger = logging.getLogger('compact_2012')
 logger.setLevel(logging.DEBUG)
 
 directory = os.path.dirname(os.path.abspath(__file__))
-for subproject in ('compact_2012_mpfshell', 'compact_2012_pyserial'):
-    filename_requirements = os.path.join(directory, subproject, 'requirements.txt')
-    if not os.path.exists(filename_requirements):
-        raise Exception('The file "{}" is missing. You have git-clone the subproject "{}" too!'.format(filename_requirements, subproject))
-    sys.path.insert(0, os.path.join(directory, subproject))
-
-import mp
-from mp.mpfexp import MpFileExplorer, RemoteIOError
+try:
+    import mp
+    import mp.micropythonshell
+except ModuleNotFoundError as ex:
+    raise Exception('The module "mpfshell2" is missing. Did you call "pip -r requirements.txt"?')
 
 import compact_2012_dac
 import calib_prepare_lib
@@ -138,10 +135,6 @@ class Dac:
 
 class Compact2012:
     def __init__(self, str_port):
-        if re.match(r'^COM\d+$', str_port) is None:
-            raise Exception('Expected a string like "COM5", but got "{}"'.format(str_port))
-        str_port2 = 'ser:' + str_port
-
         self.__calibrationLookup = None
         self.ignore_str_dac12 = False
         self.f_write_file_time_s = 0.0
@@ -159,7 +152,8 @@ class Compact2012:
         self.i_pyboard_geophone_dac = 0
         self.f_pyboard_geophone_read_s = 0
 
-        self.fe = MpFileExplorer(str_port2, reset=True)
+        self.shell = mp.micropythonshell.MicropythonShell(str_port=str_port) # 'COM10'
+        self.fe = self.shell.MpFileExplorer
         self.__sync_get_serial()
         self.__sync_init()
         self.load_calibration_lookup()
