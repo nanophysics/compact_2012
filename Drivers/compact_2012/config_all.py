@@ -25,3 +25,8 @@ ConfigCompact2012('20190606_01',
   HARDWARE_VERSION='2019',
   COMMENT='Prototype for the Compact_2012 series of 2019'
 )
+
+ConfigCompact2012('20191217_09',
+  HARDWARE_VERSION='2020',
+  COMMENT='compact_2012_da_simplebox fuer Hansjuerg Schmutz'
+)

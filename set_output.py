@@ -18,7 +18,7 @@ os.chdir(DIRECTORY_OF_THIS_FILE.joinpath('Drivers/compact_2012'))
 sys.path.insert(0, '.')
 import compact_2012_driver
 
-reDA = re.compile(r'DA(?P<channel>\d+)=(?P<voltage>[\d.]+)')
+reDA = re.compile(r'^DA(?P<channel>\d+)=(?P<voltage>[\d\.-]+)$')
 CHANNEL_COUNT=10
 
 DESCRIPTION=f'''Set the output voltage.
@@ -77,7 +77,11 @@ def main():
 
     if comport is not None:
         comport = f'COM{comport}'
+
+    # These is the essential access to compact_2020
+    # Connect
     driver = compact_2012_driver.Compact2012(comport)
+    # Use dictionary to set 'f_DA_OUT_desired_V' and 'f_gain'
     driver.sync_dac_set_all(dictVoltages)
     driver.close()
 
