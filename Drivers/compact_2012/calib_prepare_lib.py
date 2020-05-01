@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-import src_micropython.micropython_portable
+import src_micropython.micropython_portable as micropython_portable
 import compact_2012_dac
 
 DIRECTORY_CALIBRATION_RAW='calibration_raw'

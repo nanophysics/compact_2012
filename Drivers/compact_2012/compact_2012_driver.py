@@ -139,6 +139,7 @@ class Dac:
 
 class Compact2012:
     def __init__(self, str_port):
+        self.compact_2012_serial = None
         self.__calibrationLookup = None
         self.ignore_str_dac12 = False
         self.f_write_file_time_s = 0.0
