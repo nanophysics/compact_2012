@@ -31,31 +31,44 @@ def parse_arguments():
     parser.add_argument('--COM', dest='comport', type=str,
                                             help='The com port. If not provided, try to find one.')
     parser.add_argument('voltages', metavar='DAx=1.0', type=str, nargs='*',
-                                            help='The output voltages. If not provided: 0 V')
+                                            help='The output voltages. If not provided: 0 V. 1<=DAx<=10')
 
     args = parser.parse_args()
+
+    def exit():
+        print()
+        parser.print_help()
+        sys.exit()
+
+    if args.comport is not None:
+        try:
+            int(args.comport)
+        except:
+            print(f'ERROR: Expected a integer but got "{args.comport}"!')
+            exit()
 
     dictVoltages = {}
     for arg_string in args.voltages:
         match = reDA.match(arg_string)
         if match is None:
             print(f'ERROR: Unexpected parameter "{arg_string}"!')
-            continue
+            exit()
         voltage_string = match.group('voltage')
         try:
             voltage_V = float(voltage_string)
         except:
             print(f'ERROR: Unexpected voltage "{voltage_string}" in "{arg_string}"!')
-            continue
+            exit()
         channel_string = match.group('channel')
         try:
-            channel0 = int(channel_string)
+            channel1 = int(channel_string)
         except:
             print(f'ERROR: Unexpected channel "{channel_string}" in "{arg_string}"!')
-            continue
-        if not (0 < channel0 < CHANNEL_COUNT):
-            print(f'ERROR: Channel "{channel0+1}" out of range in "{arg_string}"!')
-        dictVoltages[channel0] = {'f_DA_OUT_desired_V': voltage_V, 'f_gain': 1.0 }
+            exit()
+        if not (1 <= channel1 <= CHANNEL_COUNT):
+            print(f'ERROR: Channel "{channel1}" out of range in "{arg_string}"!')
+            exit()
+        dictVoltages[channel1-1] = {'f_DA_OUT_desired_V': voltage_V, 'f_gain': 1.0 }
 
     return args.comport, dictVoltages
 

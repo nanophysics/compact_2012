@@ -227,7 +227,7 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
         dict_changed_values = {}
 
         for index, d in dict_requested_values.items():
-            assert 0 <= index <= DACS_COUNT
+            assert 0 <= index < DACS_COUNT
             obj_Dac = self.list_dacs[index]
             f_DA_OUT_desired_V = d['f_DA_OUT_desired_V']
             f_gain = d.get('f_gain', 1.0)
