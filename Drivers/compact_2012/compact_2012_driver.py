@@ -63,6 +63,7 @@ if mp.version.FULL <= REQUIRED_MPFSHELL_VERSION:
     raise Exception(f'Your "mpfshell" has version "{mp.version.FULL}" but should be higher than "{REQUIRED_MPFSHELL_VERSION}". Call "pip install --upgrade mpfshell2"!')
 import compact_2012_dac
 import calib_prepare_lib
+import config_all
 from src_micropython.micropython_portable import *
 
 
@@ -88,6 +89,7 @@ SAVE_VALUES_TO_DISK_TIME_S=5.0
 
 # sweep set interval, in seconds
 F_SWEEPINTERVAL_S = 0.03
+
 
 class TimeSpan:
     '''
@@ -140,6 +142,7 @@ class Dac:
 class Compact2012:
     def __init__(self, str_port):
         self.compact_2012_serial = None
+        self.compact_2012_config = config_all.dict_compact2012[config_all.SERIAL_UNDEFINED]
         self.__calibrationLookup = None
         self.ignore_str_dac12 = False
         self.f_write_file_time_s = 0.0
@@ -159,10 +162,11 @@ class Compact2012:
 
         self.shell = mp.micropythonshell.MicropythonShell(str_port=str_port) # 'COM10'
         self.fe = self.shell.MpFileExplorer
-        self.__sync_get_serial()
         # Download the source code
         self.shell.sync_folder('src_micropython', FILES_TO_SKIP=None)
         # Start the program
+        self.__sync_get_serial()
+        print(f'INFO: compact_2012 connected: {self.compact_2012_config}')
         self.fe.exec_('import micropython_logic')
         self.sync_status_get()
         self.load_calibration_lookup()
@@ -202,13 +206,21 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
                 f.write('DA{} {:8.8f} V     (range, jumper, {})\n'.format(obj_Dac.index+1, obj_Dac.f_value_V*obj_Dac.f_gain, obj_Dac.get_gain_string()))
 
     def __sync_get_serial(self):
-        self.compact_2012_serial = None
         try:
             self.fe.exec('import config_serial')
             serial = self.fe.eval('config_serial.SERIAL')
             self.compact_2012_serial = serial.decode('utf-8')
         except mp.pyboard.PyboardError as e:
             print('Could not read "config_serial.py" on the Compact_2012 pyboard. Calibration data will not be used! Internal error was: ({})'.format(e))
+
+        try:
+            self.compact_2012_config = config_all.dict_compact2012[self.compact_2012_serial]
+        except KeyError:
+            print()
+            print(f'WARNING: Found "config_serial.py" on pyboard with serial "{self.compact_2012_serial}". However, this serial in unknown!')
+            serials_defined = sorted(config_all.dict_compact2012.keys())
+            serials_defined.remove(config_all.SERIAL_UNDEFINED)
+            print(f'INFO: "config_all.py" lists these serials: {",".join(serials_defined)}')
 
     def get_dac(self, index):
         '''

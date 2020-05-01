@@ -28,7 +28,7 @@ Example {__file__} --COM=5 DA1=1.1 DA2=3.5
 def parse_arguments():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
 
-    parser.add_argument('--COM', dest='comport', type=str,
+    parser.add_argument('--com', dest='comport', type=str,
                                             help='The com port. If not provided, try to find one.')
     parser.add_argument('voltages', metavar='DAx=1.0', type=str, nargs='*',
                                             help='The output voltages. If not provided: 0 V. 1<=DAx<=10')
