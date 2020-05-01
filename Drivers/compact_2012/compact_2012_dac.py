@@ -2,7 +2,7 @@
 
 '''
 import itertools
-from micropython_portable import *
+from src_micropython.micropython_portable import *
 
 # constants of the schematic of compact_2012_da
 dac_12_ref_V    = 3.3

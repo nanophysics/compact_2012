@@ -53,13 +53,17 @@ logger.setLevel(logging.DEBUG)
 directory = os.path.dirname(os.path.abspath(__file__))
 try:
     import mp
+    import mp.version
     import mp.micropythonshell
 except ModuleNotFoundError as ex:
     raise Exception('The module "mpfshell2" is missing. Did you call "pip -r requirements.txt"?')
 
+REQUIRED_MPFSHELL_VERSION='100.9.3'
+if mp.version.FULL <= REQUIRED_MPFSHELL_VERSION:
+    raise Exception(f'Your "mpfshell" has version "{mp.version.FULL}" but should be higher than "{REQUIRED_MPFSHELL_VERSION}". Call "pip install --upgrade mpfshell2"!')
 import compact_2012_dac
 import calib_prepare_lib
-from micropython_portable import *
+from src_micropython.micropython_portable import *
 
 
 # ranges and scaling
@@ -155,7 +159,11 @@ class Compact2012:
         self.shell = mp.micropythonshell.MicropythonShell(str_port=str_port) # 'COM10'
         self.fe = self.shell.MpFileExplorer
         self.__sync_get_serial()
-        self.__sync_init()
+        # Download the source code
+        self.shell.sync_folder('src_micropython', FILES_TO_SKIP=None)
+        # Start the program
+        self.fe.exec_('import micropython_logic')
+        self.sync_status_get()
         self.load_calibration_lookup()
 
     def close(self):
@@ -199,14 +207,7 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
             serial = self.fe.eval('config_serial.SERIAL')
             self.compact_2012_serial = serial.decode('utf-8')
         except mp.pyboard.PyboardError as e:
-            print('Could not read config_serial.py on the Compact_2012 pyboard. Do not use calibration data! ({})'.format(e))
-
-    def __sync_init(self):
-        for filename in ('micropython_ads1219.py', 'micropython_portable.py', 'micropython_logic.py'):
-            filenameFull = os.path.join(os.path.dirname(os.path.abspath(__file__)), filename)
-            # self.fe.put(filenameFull, filename)
-            self.fe.execfile(filenameFull)
-        self.sync_status_get()
+            print('Could not read "config_serial.py" on the Compact_2012 pyboard. Calibration data will not be used! Internal error was: ({})'.format(e))
 
     def get_dac(self, index):
         '''
@@ -319,7 +320,7 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
         str_dac20, str_dac12 = compact_2012_dac.getDAC20DAC12HexStringFromValues(f_values_plus_min_v, calibrationLookup=self.__calibrationLookup)
         if self.ignore_str_dac12:
             str_dac12 = '0'*DACS_COUNT*DAC12_NIBBLES
-        s_py_command = 'set_dac("{}", "{}")'.format(str_dac20, str_dac12)
+        s_py_command = 'micropython_logic.set_dac("{}", "{}")'.format(str_dac20, str_dac12)
         self.obj_time_span_set_dac.start()
 
         str_status = self.fe.eval(s_py_command)
@@ -341,20 +342,20 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
             Poll for the pyboard_status
         '''
         self.obj_time_span_get_status.start()
-        str_status = self.fe.eval('get_status()')
+        str_status = self.fe.eval('micropython_logic.get_status()')
         self.obj_time_span_get_status.end()
         self.__update_status_return(str_status)
 
     def sync_set_user_led(self, on):
         assert isinstance(on, bool)
-        self.fe.eval('set_user_led({})'.format(on))
+        self.fe.eval('micropython_logic.set_user_led({})'.format(on))
 
     def sync_set_geophone_led_threshold_percent_FS(self, threshold_percent_FS):
         assert isinstance(threshold_percent_FS, float)
         assert 0.0 <= threshold_percent_FS <= 100.0
         threshold_dac = threshold_percent_FS*4096.0//100.0
         assert 0.0 <= threshold_dac <= 4096
-        self.fe.eval('set_geophone_threshold_dac({})'.format(threshold_dac))
+        self.fe.eval('micropython_logic.set_geophone_threshold_dac({})'.format(threshold_dac))
 
     def debug_geophone_print(self):
         print('geophone:                      dac={:016b}={:04d} [0..4095], voltage={:06f}mV, percent={:04.01f}'.format(self.i_pyboard_geophone_dac, self.i_pyboard_geophone_dac, self.__read_geophone_voltage(), self.get_geophone_percent_FS()))
@@ -383,10 +384,10 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
         '''
         Initializes the AD20
         '''
-        self.fe.eval('calib_raw_init()')
+        self.fe.eval('micropython_logic.calib_raw_init()')
 
     def sync_calib_read_ADC24(self, iDac_index):
-        strADC24 = self.fe.eval('calib_read_ADC24({})'.format(iDac_index))
+        strADC24 = self.fe.eval('micropython_logic.calib_read_ADC24({})'.format(iDac_index))
         iADC24 = int(strADC24)
 
         fADC24 = convert_ADC24_signed_to_V(iADC24)
@@ -400,7 +401,7 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
         assert iDacEnd < DAC20_MAX
         assert iDacStart < iDacEnd
         assert 0 <= iDac_index < DACS_COUNT
-        self.fe.eval('calib_raw_measure("{}", {}, {}, {})'.format(filename, iDac_index, iDacStart, iDacEnd))
+        self.fe.eval('micropython_logic.calib_raw_measure("{}", {}, {}, {})'.format(filename, iDac_index, iDacStart, iDacEnd))
         pass
 
     def calib_raw_readfile(self, filename):

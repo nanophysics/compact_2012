@@ -10,10 +10,10 @@ import uos
 import utime
 print('This is "main.py". uos.getcwd()="{}"'.format(uos.getcwd()))
 
-for filename in ('config_serial.py', 'micropython_ads1219.py', 'micropython_portable.py', 'micropython_logic.py'):
-  print('execfile("{}")'.format(filename))
-  execfile(filename)
-
+from config_serial import *
+from micropython_ads1219 import *
+from micropython_portable import *
+from micropython_logic import *
 
 CALIB_FILES_PER_DAC = 32
 FILENAME_TMP = 'tmp.txt'

@@ -5,6 +5,9 @@ import micropython
 import binascii
 import utime
 
+from micropython_portable import *
+from micropython_portable import *
+
 '''
 compact_40_pin_flatcable	pyboard
 

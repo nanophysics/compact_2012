@@ -57,15 +57,6 @@ def parse_arguments():
             print(f'ERROR: Channel "{channel0+1}" out of range in "{arg_string}"!')
         dictVoltages[channel0] = {'f_DA_OUT_desired_V': voltage_V, 'f_gain': 1.0 }
 
-    print(f'Setting outputs of compact_2012')
-    for channel0 in range(CHANNEL_COUNT):
-        voltage_V = 0.0
-        try:
-            voltage_V = dictVoltages[channel0]['f_DA_OUT_desired_V']
-        except KeyError:
-            pass
-        print(f'   DA{channel0+1}={voltage_V} V')
-
     return args.comport, dictVoltages
 
 def main():
@@ -76,6 +67,16 @@ def main():
     driver = compact_2012_driver.Compact2012(comport)
     driver.sync_dac_set_all(dictVoltages)
     driver.close()
+
+    print()
+    print(f'Setting outputs of compact_2012')
+    for channel0 in range(CHANNEL_COUNT):
+        voltage_V = 0.0
+        try:
+            voltage_V = dictVoltages[channel0]['f_DA_OUT_desired_V']
+        except KeyError:
+            pass
+        print(f'   DA{channel0+1}={voltage_V} V')
 
 if __name__ == '__main__':
     main()
