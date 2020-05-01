@@ -6,7 +6,7 @@ import binascii
 import utime
 
 from micropython_portable import *
-from micropython_portable import *
+from micropython_ads1219 import *
 
 '''
 compact_40_pin_flatcable	pyboard
