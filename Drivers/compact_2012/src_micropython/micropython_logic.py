@@ -281,6 +281,11 @@ def calib_set_DAC12(iDAC12_index, iDAC12_value):
 def calib_raw_measure(filename, serial, iDac_index, iDacStart, iDacEnd, iSettleTime_s=0, f_status=None):
     calib_set_mux(iDac_index)
 
+    class State:
+        pass
+    state = State()
+    state.iSettleTime_s = iSettleTime_s
+
     gain_AD8428 = 2000.0
     i_mittelwert = 3
     factor = 3.3/(2.0**23)/gain_AD8428/float(i_mittelwert)
@@ -314,10 +319,10 @@ def calib_raw_measure(filename, serial, iDac_index, iDacStart, iDacEnd, iSettleT
                 str_dac20 = getHexStringFromListInt20(list_i_dac20)
                 set_dac(str_dac20, str_dac12)
 
-                if iSettleTime_s > 0:
+                if state.iSettleTime_s > 0:
                     # Initial sleep makes sure that the voltage may settle
-                    utime.sleep(iSettleTime_s)
-                    iSettleTime_s = 0
+                    utime.sleep(state.iSettleTime_s)
+                    state.iSettleTime_s = 0
 
                 # Wait
                 utime.sleep_ms(30)
