@@ -7,14 +7,14 @@ SERIAL_UNDEFINED='SERIAL_UNDEFINED'
 dict_compact2012 = {}
 
 class ConfigCompact2012:
-  def __init__(self, SERIAL, HARDWARE_VERSION, COMMENT):
-    dict_compact2012[SERIAL] = self
-    self.SERIAL = SERIAL
+  def __init__(self, HWSERIAL, HARDWARE_VERSION, COMMENT):
+    dict_compact2012[HWSERIAL] = self
+    self.HWSERIAL = HWSERIAL
     self.HARDWARE_VERSION = HARDWARE_VERSION
     self.COMMENT = COMMENT
 
   def __repr__(self):
-    return f'serial "{self.SERIAL}" with Hardware "{self.HARDWARE_VERSION}". {self.COMMENT}'
+    return f'serial "{self.HWSERIAL}" with Hardware "{self.HARDWARE_VERSION}". {self.COMMENT}'
 
 ConfigCompact2012(SERIAL_UNDEFINED,
   HARDWARE_VERSION='2019',

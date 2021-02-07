@@ -278,7 +278,7 @@ def calib_set_DAC12(iDAC12_index, iDAC12_value):
 
     set_dac(str_dac20, str_dac12)
 
-def calib_raw_measure(filename, serial, iDac_index, iDacStart, iDacEnd, iSettleTime_s=0, f_status=None):
+def calib_raw_measure(filename, hwserial, iDac_index, iDacStart, iDacEnd, iSettleTime_s=0, f_status=None):
     calib_set_mux(iDac_index)
 
     class State:
@@ -301,7 +301,7 @@ def calib_raw_measure(filename, serial, iDac_index, iDacStart, iDacEnd, iSettleT
     # We measure differences: We have to measure one step more (See: https://en.wikipedia.org/wiki/Off-by-one_error#Fencepost_error)
     iDacEnd += 1
 
-    w = CalibRawFileWriter(filename, serial, iDacStart, iDac_index)
+    w = CalibRawFileWriter(filename, hwserial, iDacStart, iDac_index)
 
     try:
         for iDac in range(iDacStart, iDacEnd):
@@ -353,7 +353,7 @@ timer_blink = pyb.Timer(4, freq=BLINK_FREQUENCY_HZ)
 pyb_led_red = pyb.LED(1)
 pyb_led_red.on()
 
-i2c = machine.I2C(scl=machine.Pin('Y9'), sda=machine.Pin('Y10'))
+i2c = machine.SoftI2C(scl=machine.Pin('Y9'), sda=machine.Pin('Y10'))
 
 spi = pyb.SPI(1)
 

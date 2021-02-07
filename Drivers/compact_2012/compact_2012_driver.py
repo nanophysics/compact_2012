@@ -4,7 +4,10 @@ import sys
 import re
 import math
 import time
+import pathlib
 import logging
+
+from mp.micropythonshell import FILENAME_IDENTIFICATION
 
 '''
     Naming conventions
@@ -50,22 +53,25 @@ logger = logging.getLogger('compact_2012')
 
 logger.setLevel(logging.DEBUG)
 
-directory = os.path.dirname(os.path.abspath(__file__))
+DIRECTORY_OF_THIS_FILE = pathlib.Path(__file__).absolute().parent
 try:
     import mp
     import mp.version
     import mp.micropythonshell
+    import mp.pyboard_query
 except ModuleNotFoundError as ex:
     raise Exception('The module "mpfshell2" is missing. Did you call "pip -r requirements.txt"?')
 
-REQUIRED_MPFSHELL_VERSION='100.9.3'
-if mp.version.FULL <= REQUIRED_MPFSHELL_VERSION:
+REQUIRED_MPFSHELL_VERSION='100.9.8'
+if mp.version.FULL < REQUIRED_MPFSHELL_VERSION:
     raise Exception(f'Your "mpfshell" has version "{mp.version.FULL}" but should be higher than "{REQUIRED_MPFSHELL_VERSION}". Call "pip install --upgrade mpfshell2"!')
+
 import compact_2012_dac
 import calib_prepare_lib
 import config_all
 from src_micropython.micropython_portable import *
 
+HWTYPE_COMPACT_2012 = 'compact_2012'
 
 # ranges and scaling
 DICT_GAIN_2_VALUE = {
@@ -140,13 +146,29 @@ class Dac:
         return '??? {:5.1f}'.format(self.f_gain)
 
 class Compact2012:
-    def __init__(self, str_port):
-        self.compact_2012_serial = None
-        self.compact_2012_config = config_all.dict_compact2012[config_all.SERIAL_UNDEFINED]
+    def __init__(self, board=None):
+        if board is None:
+            board = mp.pyboard_query.ConnectPyboard(hwtype=HWTYPE_COMPACT_2012)
+        assert isinstance(board, mp.pyboard_query.Board)
+        self.board = board
+        self.board.systemexit_firmware_required(min='1.14.0', max='1.14.0')
+        self.compact_2012_serial = self.board.identification.HWSERIAL
+        try:
+            self.compact_2012_config = config_all.dict_compact2012[self.compact_2012_serial]
+        except KeyError:
+            self.compact_2012_config = config_all.dict_compact2012[config_all.SERIAL_UNDEFINED]
+            print()
+            print(f'WARNING: The connected "compact_2012" has serial "{self.compact_2012_serial}". However, this serial in unknown!')
+            serials_defined = sorted(config_all.dict_compact2012.keys())
+            serials_defined.remove(config_all.SERIAL_UNDEFINED)
+            print(f'INFO: "config_all.py" lists these serials: {",".join(serials_defined)}')
+
+        print(f'INFO: {HWTYPE_COMPACT_2012} connected: {self.compact_2012_config}')
+
         self.__calibrationLookup = None
         self.ignore_str_dac12 = False
         self.f_write_file_time_s = 0.0
-        self.str_filename_values = os.path.join(directory, 'Values-{}.txt'.format(str_port))
+        self.filename_values = DIRECTORY_OF_THIS_FILE / f'Values-{self.compact_2012_serial}.txt'
         self.list_dacs = list(map(lambda i: Dac(i), range(DACS_COUNT)))
 
         self.obj_time_span_set_dac = TimeSpan(100, 'set_dac()')
@@ -160,13 +182,11 @@ class Compact2012:
         self.i_pyboard_geophone_dac = 0
         self.f_pyboard_geophone_read_s = 0
 
-        self.shell = mp.micropythonshell.MicropythonShell(str_port=str_port) # 'COM10'
+        self.shell = self.board.mpfshell
         self.fe = self.shell.MpFileExplorer
         # Download the source code
-        self.shell.sync_folder('src_micropython', FILES_TO_SKIP=None)
+        self.shell.sync_folder(DIRECTORY_OF_THIS_FILE / 'src_micropython', FILES_TO_SKIP=['config_identification.py'])
         # Start the program
-        self.__sync_get_serial()
-        print(f'INFO: compact_2012 connected: {self.compact_2012_config}')
         self.fe.exec_('import micropython_logic')
         self.sync_status_get()
         self.load_calibration_lookup()
@@ -194,7 +214,7 @@ class Compact2012:
                 return
         self.f_write_file_time_s = time.perf_counter() + SAVE_VALUES_TO_DISK_TIME_S
 
-        with open(self.str_filename_values, 'w') as f:
+        with self.filename_values.open('w') as f:
             str_date_time = time.strftime('%Y-%m-%d_%H:%M:%S', time.localtime())
 
             f.write('{}\n'.format(str_date_time))
@@ -204,23 +224,6 @@ You can use this values when Labber crashes and you do not know how to go on.
 Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(SAVE_VALUES_TO_DISK_TIME_S))
             for obj_Dac in self.list_dacs:
                 f.write('DA{} {:8.8f} V     (range, jumper, {})\n'.format(obj_Dac.index+1, obj_Dac.f_value_V*obj_Dac.f_gain, obj_Dac.get_gain_string()))
-
-    def __sync_get_serial(self):
-        try:
-            self.fe.exec('import config_serial')
-            serial = self.fe.eval('config_serial.SERIAL')
-            self.compact_2012_serial = serial.decode('utf-8')
-        except mp.pyboard.PyboardError as e:
-            print('Could not read "config_serial.py" on the Compact_2012 pyboard. Calibration data will not be used! Internal error was: ({})'.format(e))
-
-        try:
-            self.compact_2012_config = config_all.dict_compact2012[self.compact_2012_serial]
-        except KeyError:
-            print()
-            print(f'WARNING: Found "config_serial.py" on pyboard with serial "{self.compact_2012_serial}". However, this serial in unknown!')
-            serials_defined = sorted(config_all.dict_compact2012.keys())
-            serials_defined.remove(config_all.SERIAL_UNDEFINED)
-            print(f'INFO: "config_all.py" lists these serials: {",".join(serials_defined)}')
 
     def get_dac(self, index):
         '''

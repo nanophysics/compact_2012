@@ -28,8 +28,6 @@ Example {__file__} --COM=5 DA1=1.1 DA2=3.5
 def parse_arguments():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
 
-    parser.add_argument('--com', dest='comport', type=str,
-                                            help='The com port. If not provided, try to find one.')
     parser.add_argument('voltages', metavar='DAx=1.0', type=str, nargs='*',
                                             help='The output voltages. If not provided: 0 V. 1<=DAx<=10')
 
@@ -39,13 +37,6 @@ def parse_arguments():
         print()
         parser.print_help()
         sys.exit()
-
-    if args.comport is not None:
-        try:
-            int(args.comport)
-        except:
-            print(f'ERROR: Expected a integer but got "{args.comport}"!')
-            exit()
 
     dictVoltages = {}
     for arg_string in args.voltages:
@@ -70,17 +61,14 @@ def parse_arguments():
             exit()
         dictVoltages[channel1-1] = {'f_DA_OUT_desired_V': voltage_V, 'f_gain': 1.0 }
 
-    return args.comport, dictVoltages
+    return dictVoltages
 
 def main():
-    comport, dictVoltages = parse_arguments()
-
-    if comport is not None:
-        comport = f'COM{comport}'
+    dictVoltages = parse_arguments()
 
     # These is the essential access to compact_2020
     # Connect
-    driver = compact_2012_driver.Compact2012(comport)
+    driver = compact_2012_driver.Compact2012()
     # Use dictionary to set 'f_DA_OUT_desired_V' and 'f_gain'
     driver.sync_dac_set_all(dictVoltages)
     driver.close()

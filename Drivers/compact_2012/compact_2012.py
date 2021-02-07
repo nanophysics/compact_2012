@@ -5,7 +5,7 @@ import InstrumentDriver
 import compact_2012_driver
 
 class Driver(InstrumentDriver.InstrumentWorker):
-    """ This class implements the Acqiris card driver"""
+    """ This class implements the Compact 2012 driver"""
 
     def performOpen(self, options={}):
         """Perform the operation of opening the instrument connection"""
@@ -13,9 +13,7 @@ class Driver(InstrumentDriver.InstrumentWorker):
         self.compact2012 = None
 
         # open connection
-        str_rs232_port = str(self.comCfg.address)
-        # USB0::0x3923::0x7514::01A39834::RAW
-        self.compact2012 = compact_2012_driver.Compact2012(str_rs232_port) 
+        self.compact2012 = compact_2012_driver.Compact2012() 
     
         # Reset the usb connection (it must not change the applied voltages)
         self.log('ETH Compact Driver: Connection resetted at startup')

@@ -2,7 +2,7 @@ import time
 import compact_2012_driver
 
 if __name__ == '__main__':
-    driver = compact_2012_driver.Compact2012('COM10')
+    driver = compact_2012_driver.Compact2012()
     driver.sync_set_geophone_led_threshold_percent_FS(10.0)
 
     driver.sync_calib_raw_init()

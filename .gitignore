@@ -1,3 +1,4 @@
 __pycache__
 .vscode/.ropeproject
-config_serial.py
+Drivers/compact_2012/calib_*_out.txt
+Drivers/compact_2012/Values-*.txt

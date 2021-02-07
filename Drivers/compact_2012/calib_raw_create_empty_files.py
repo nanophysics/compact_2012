@@ -6,7 +6,7 @@
 #
 import os
 
-import config_serial
+import config_identification
 import micropython_portable
 
 DACS_COUNT = 10
@@ -15,7 +15,7 @@ FILENAME_CALIB_RAW_TEMPLATE = 'calib_raw_{}_dac{}-{:02d}.txt'
 
 for iDacA_index in range(0, micropython_portable.DACS_COUNT, 2):
   for iFileNumber in range(0, CALIB_FILES_PER_DAC):
-    filename = FILENAME_CALIB_RAW_TEMPLATE.format(config_serial.SERIAL, iDacA_index, iFileNumber)
+    filename = FILENAME_CALIB_RAW_TEMPLATE.format(config_identification.HWSERIAL, iDacA_index, iFileNumber)
     if os.path.exists(filename):
       # Don't override existing files
       print('{} skipped'.format(filename))

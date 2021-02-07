@@ -10,7 +10,15 @@ import uos
 import utime
 print('This is "main.py". uos.getcwd()="{}"'.format(uos.getcwd()))
 
-for filename in ('config_serial.py', 'micropython_ads1219.py', 'micropython_portable.py', 'micropython_logic.py'):
+import config_identification
+
+firmware_version = uos.uname().release
+print('firmware_version:', firmware_version)
+firmware_required = '1.14.0'
+if firmware_version != firmware_required:
+    raise Exception('firmware is {} but {} is required!'.format(firmware_version, firmware_required))
+
+for filename in ('config_identification.py', 'micropython_ads1219.py', 'micropython_portable.py', 'micropython_logic.py'):
   print('execfile("{}")'.format(filename))
   execfile(filename)
 
@@ -35,7 +43,7 @@ try:
   list_files = uos.listdir()
 
   # Measure DAC12 gain
-  filename = FILENAME_CALIB_RAW_TEMPLATE_DAC12.format(SERIAL)
+  filename = FILENAME_CALIB_RAW_TEMPLATE_DAC12.format(HWSERIAL)
   if filename in list_files:
     print('{} exists. Skipped'.format(filename))
   else:
@@ -78,7 +86,7 @@ try:
       # iDacStart=0x80000
       # iDacEnd=0x80000+100
       # iDacEnd=0xFFFFF
-      filename = FILENAME_CALIB_RAW_TEMPLATE.format(SERIAL, iDacA_index, iDacStart//iDacFileSize)
+      filename = FILENAME_CALIB_RAW_TEMPLATE.format(HWSERIAL, iDacA_index, iDacStart//iDacFileSize)
       if filename in list_files:
         print('{} exists. Skipped'.format(filename))
         iSettleTime_s = SETTLE_TIME_S
@@ -109,7 +117,7 @@ try:
 
       time_start_ms = utime.ticks_ms() + 1000*iSettleTime_s
       iDacEnd = iDacStart+iDacFileSize
-      calib_raw_measure(FILENAME_TMP, SERIAL, iDacA_index, iDacStart, iDacEnd, iSettleTime_s=iSettleTime_s, f_status=status)
+      calib_raw_measure(FILENAME_TMP, HWSERIAL, iDacA_index, iDacStart, iDacEnd, iSettleTime_s=iSettleTime_s, f_status=status)
       uos.rename(FILENAME_TMP, filename)
       print('{}: {}%'.format(filename, 100))
       iSettleTime_s = 0

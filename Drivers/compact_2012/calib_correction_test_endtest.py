@@ -88,7 +88,7 @@ def getOtherDAC(iDac_index0):
     return dictDacFix[iDac_index0]
 
 if __name__ == '__main__':
-    driver = compact_2012_driver.Compact2012('COM4')
+    driver = compact_2012_driver.Compact2012()
     driver.sync_set_geophone_led_threshold_percent_FS(10.0)
     driver.sync_calib_raw_init()
 
