@@ -9,4 +9,4 @@ HWTYPE = 'compact_2012' # or 'scanner_pyb_2020', ...
 HWVERSION = '-'
 
 # The serial number of this hardware
-HWSERIAL = '20190606_02'  # 20190606_01
+HWSERIAL = '20200918_80'  # 20190606_01
