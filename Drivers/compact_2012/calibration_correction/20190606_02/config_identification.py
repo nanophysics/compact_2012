@@ -1,0 +1,16 @@
+#
+# Copy this file onto the pyboards flash of the pyboard and rename it to 'config_identification.py'
+#
+
+# The type of hardware connected to this pyboard
+HWTYPE = 'compact_2012' # or 'scanner_pyb_2020', ...
+
+# The hardware version as printed on the schematics
+HWVERSION = 'compact 20200806_51'
+
+# The serial number of this hardware
+HWSERIAL = '20190606_02'  # 20190606_01
+
+MODIFICATIONS = '''IV converters
+HV amplifiers
+new switches blabla'''

@@ -18,7 +18,7 @@ The software used to use this extensions uses the prefix `calib_`.
     - `Drivers\compact_2012\src_micropython\config_identification_template.py`
     - `Drivers\compact_2012\src_micropython\micropython_portable.py`
     - `Drivers\compact_2012\src_micropython\micropython_logic.py`
-    - `Drivers\compact_2012\ src_micropython\micropython_ads1219.py`
+    - `Drivers\compact_2012\src_micropython\micropython_ads1219.py`
 
   - Rename `config_identification_template.py` to `config_identification.py`.
   - Edit `config_identification.py` and make sure the serial number of `config_identification.py` pyboard corresponds to the Compact_2012
