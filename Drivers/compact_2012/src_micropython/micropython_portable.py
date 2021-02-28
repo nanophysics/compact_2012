@@ -4,7 +4,7 @@
 import binascii
 
 # Analog limit of differential amplifier
-fADC24_LIMIT_V = 0.7e-3
+fADC24_LIMIT_V = 0.7e-3 # corresponds to +- 1.4V at the ADC24 input
 
 # DACS in compact2012
 DACS_COUNT = 10

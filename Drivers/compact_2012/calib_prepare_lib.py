@@ -166,6 +166,7 @@ def prepare_by_serial(serial):
 
             r = micropython_portable.CalibRawFileReader(filenameFull)
 
+            print('iDacA_index: ', iDacA_index, '   filename: ', filename)
             list_step_a_V, list_step_b_V = r.values()
             assert iDacA_index == r.iDacA_index
             assert iDacStart == r.iDacStart
