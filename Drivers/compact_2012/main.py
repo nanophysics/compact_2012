@@ -106,7 +106,7 @@ try:
           fPercentRemaining = 1.0-fPercent
           fTimePerMeasurement_ms = (utime.ticks_ms()-time_start_ms)/iDacProgess
           fTimeRemaining_ms = (iDacEnd-iDac)*fTimePerMeasurement_ms
-          iTotalMeasurementsRemaining = DAC20_MAX*(DACS_COUNT-iDacA_index)//2 + DAC20_MAX-iDac
+          iTotalMeasurementsRemaining = DAC20_MAX*(DACS_COUNT-iDacA_index-2)//2 + DAC20_MAX-iDac
           fTimeTotalRemaining_ms = iTotalMeasurementsRemaining * fTimePerMeasurement_ms
           print('{}: {:0.0f}% {:0.1f}h remaining for this file. {:0.1f}h remaining total.'.format(
               filename, 

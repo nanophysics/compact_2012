@@ -62,7 +62,7 @@ try:
 except ModuleNotFoundError as ex:
     raise Exception('The module "mpfshell2" is missing. Did you call "pip -r requirements.txt"?')
 
-REQUIRED_MPFSHELL_VERSION='100.9.8'
+REQUIRED_MPFSHELL_VERSION='100.9.10'
 if mp.version.FULL < REQUIRED_MPFSHELL_VERSION:
     raise Exception(f'Your "mpfshell" has version "{mp.version.FULL}" but should be higher than "{REQUIRED_MPFSHELL_VERSION}". Call "pip install --upgrade mpfshell2"!')
 
@@ -151,6 +151,7 @@ class Compact2012:
             board = mp.pyboard_query.ConnectPyboard(hwtype=HWTYPE_COMPACT_2012)
         assert isinstance(board, mp.pyboard_query.Board)
         self.board = board
+        self.board.systemexit_hwtype_required(hwtype=HWTYPE_COMPACT_2012)
         self.board.systemexit_firmware_required(min='1.14.0', max='1.14.0')
         self.compact_2012_serial = self.board.identification.HWSERIAL
         try:
