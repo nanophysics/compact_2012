@@ -1,10 +1,10 @@
 import itertools
-import micropython_portable
+from src_micropython import micropython_portable
 import calib_prepare_lib
 
 if __name__ == '__main__':
     if True:
-        calib_prepare_lib.prepare_by_serial(serial='20190606_02')
+        calib_prepare_lib.prepare_by_serial(serial='20200918_81')
 
     if False:
         # random signal for testing

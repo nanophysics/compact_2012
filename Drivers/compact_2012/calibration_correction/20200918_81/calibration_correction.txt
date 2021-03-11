@@ -1,0 +1,31 @@
+DA1, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0514297694494457
+DA2, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0609284462616482
+DA3, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1225208378317335
+DA4, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.131111516393928
+DA5, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1549079691724538
+DA6, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1295215244130044
+DA7, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1268236476955178
+DA8, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1336037938460883
+DA9, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1309061129073799
+DA10, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1285627056998426
+
+dac=0: argmin=790528 (5.078125000 V)
+dac=0: argmax=688128 (3.125000000 V)
+dac=1: argmin=790528 (5.078125000 V)
+dac=1: argmax=688128 (3.125000000 V)
+dac=2: argmin=790528 (5.078125000 V)
+dac=2: argmax=688128 (3.125000000 V)
+dac=3: argmin=741376 (4.140625000 V)
+dac=3: argmax=688128 (3.125000000 V)
+dac=4: argmin=790528 (5.078125000 V)
+dac=4: argmax=688128 (3.125000000 V)
+dac=5: argmin=790528 (5.078125000 V)
+dac=5: argmax=688128 (3.125000000 V)
+dac=6: argmin=790528 (5.078125000 V)
+dac=6: argmax=688128 (3.125000000 V)
+dac=7: argmin=790528 (5.078125000 V)
+dac=7: argmax=688128 (3.125000000 V)
+dac=8: argmin=790528 (5.078125000 V)
+dac=8: argmax=688128 (3.125000000 V)
+dac=9: argmin=790528 (5.078125000 V)
+dac=9: argmax=688128 (3.125000000 V)
