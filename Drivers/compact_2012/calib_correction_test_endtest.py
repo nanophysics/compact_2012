@@ -10,7 +10,10 @@
 #
 
 import time
+import pathlib
 import compact_2012_driver
+
+DIRECTORY_OF_THIS_FILE = pathlib.Path(__file__).absolute().parent
 
 bFast = False
 
@@ -71,11 +74,16 @@ list_measurements = (
 )
 
 list_measurements = (
-    (0, 3.125000000),
-    (1, 0.822753906),
-    (3, 5.078125000),
-    (6, -0.270996094),
-    (9, -0.036621094),
+    (0, 5.039062500),
+    (1, 5.039062500),
+    (2, 5.039062500),
+    (3, 1.875000000),
+    (4, 5.078125000),
+    (5, 5.078125000),
+    (6, 5.078125000),
+    (7, 4.140625000),
+    (8, 5.039062500),
+    (9, 5.078125000),
 )
 
 def getOtherDAC(iDac_index0):
@@ -101,10 +109,10 @@ if __name__ == '__main__':
     for iDacDUT_index0, fDacMiddle_V in list_measurements:
         iDacFix_index0 = getOtherDAC(iDacDUT_index0)
 
-        filename = f'calibration_correction/{driver.compact_2012_serial}/calib_correction_test_endtest_out_DA{iDacDUT_index0+1:02d}_{fDacMiddle_V:10.9f}.txt'
-        print(filename)
+        filename = DIRECTORY_OF_THIS_FILE / 'calibration_correction' / driver.compact_2012_serial / f'calib_correction_test_endtest_out_DA{iDacDUT_index0+1:02d}_{fDacMiddle_V:10.9f}.txt'
+        print(str(filename))
 
-        with open(filename, 'w') as f:
+        with filename.open('w') as f:
             for indent, do_lookup, use_str_dac in (
                     (0, True, True),
                     (4, False, True),
