@@ -1,13 +1,13 @@
-DA1, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1311055418282525
-DA2, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.131796449036837
-DA3, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0936193231009346
-DA4, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1254126981688033
-DA5, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1170805012094944
-DA6, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1153576183343157
-DA7, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1320320969396027
-DA8, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1340793546260401
-DA9, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.113339298384757
-DA10, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.1246084725722236
+DA1, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0136828302724754
+DA2, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.015408891681576
+DA3, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=0.989279740018739
+DA4, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0192101972924237
+DA5, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.004461083801706
+DA6, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0048612539530115
+DA7, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0172568046052184
+DA8, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0197808477788597
+DA9, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0038247545351087
+DA10, f_DAC12_int_per_V/f_fallback_dac_12_int_per_V=1.0150452969540043
 
 dac=0: argmin=741376 (4.140625000 V)
 dac=0: argmax=688128 (3.125000000 V)

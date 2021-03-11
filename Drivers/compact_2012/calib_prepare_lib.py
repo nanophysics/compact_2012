@@ -187,6 +187,7 @@ def prepare_by_serial(serial):
 
             mean_V = array_stepsize_V.mean()
             assert STEPSIZE_EXPECTED_MEAN_MIN_V < mean_V < STEPSIZE_EXPECTED_MEAN_MAX_V, 'Expected a step of about 19uV but got {} V. Check the cabeling!'.format(mean_V)
+            print("Search solution for iDac_index_", iDac_index_)
             _stepsum_dac_12, _stepsize_dac_12, correction_dac_12 = find_solution(array_stepsize_V, f_DAC12_int_per_V)
 
             calib_correction_data.set_correction(iDac_index=iDac_index_, data=correction_dac_12)

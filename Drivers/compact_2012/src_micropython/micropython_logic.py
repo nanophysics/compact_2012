@@ -150,7 +150,7 @@ def set_dac(str_dac20, str_dac12):
     communication_activity()
 
     # Enable the interrupts AFTER we left this function
-    micropython.schedule(machine.enable_irq, irq_state)
+    machine.enable_irq(irq_state)
 
     return get_status()
 

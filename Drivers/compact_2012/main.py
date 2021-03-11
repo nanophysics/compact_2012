@@ -51,7 +51,7 @@ try:
     calib_set_DAC12(iDAC12_index=0, iDAC12_value=0)
     utime.sleep(3.0)
   
-    I_SETTLE_TIME_DAC12_S = 0.03
+    I_SETTLE_TIME_DAC12_S = 0.1
     I_MEASUREMENT_COUNT_DAC12 = 20
     with open(FILENAME_TMP, 'w') as f:
       for iDAC_index in range(DACS_COUNT):
