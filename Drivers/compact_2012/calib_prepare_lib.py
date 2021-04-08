@@ -162,6 +162,7 @@ def prepare_by_serial(serial):
             filenameFull = os.path.join(DIRECTORY_CALIBRATION_RAW_FULL, filename)
             if not os.path.exists(filenameFull):
                 print('WARNING: File missing {}!'.format(filename))
+                input("File missing. Please only continue by hit enter if you know what you do!")
                 continue
 
             r = micropython_portable.CalibRawFileReader(filenameFull)
