@@ -40,6 +40,15 @@ ConfigCompact2012('20200918_72',
   # extension_right = 'empty'
 )
 
+ConfigCompact2012('20200918_73',
+  HARDWARE_VERSION='2020',
+  COMMENT='compact_2012_da'
+  # HV_amplifier = True
+  # Resolution_dac_12 = True
+  # extension_left = 'empty'
+  # extension_right = 'empty'
+)
+
 ConfigCompact2012('20200918_74',
   HARDWARE_VERSION='2020',
   COMMENT='compact_2012_da'
