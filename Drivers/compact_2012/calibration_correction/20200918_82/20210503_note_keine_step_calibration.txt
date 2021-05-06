@@ -1,0 +1,62 @@
+Peter Maerki 2021-05-03_13_36_26
+
+Eingangsrange reicht nicht. Tja, lasse es.
+Abgesehen davon alles ok.
+
+
+
+Kalibration geht nicht einfach durch.
+
+Traceback (most recent call last):
+  File "C:\Users\maerki\AppData\Local\Programs\Python\Python37-32\lib\runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "C:\Users\maerki\AppData\Local\Programs\Python\Python37-32\lib\runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+    cli.main()
+  File "c:\Users\maerki\.vscode\extensions\ms-python.python-2021.4.765268190\pythonFiles\lib\python\debugpy/..\debugpy\server\cli.py", line 444, in main
+    run()
+  File "c:\Users\maerki\.vscode\extensions\ms-python.python-2021.4.765268190\pythonFiles\lib\python\debugpy/..\debugpy\server\cli.py", line 285, in run_file
+    runpy.run_path(target_as_str, run_name=compat.force_str("__main__"))
+  File "C:\Users\maerki\AppData\Local\Programs\Python\Python37-32\lib\runpy.py", line 263, in run_path
+    pkg_name=pkg_name, script_name=fname)
+  File "C:\Users\maerki\AppData\Local\Programs\Python\Python37-32\lib\runpy.py", line 96, in _run_module_code
+    mod_name, mod_spec, pkg_name, script_name)
+  File "C:\Users\maerki\AppData\Local\Programs\Python\Python37-32\lib\runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "c:\data\compact_2012_git\Drivers\compact_2012\calib_prepare_run.py", line 7, in <module>
+    calib_prepare_lib.prepare_by_serial(serial='20200918_82')
+  File "c:\data\compact_2012_git\Drivers\compact_2012\calib_prepare_lib.py", line 147, in prepare_by_serial
+    f_DAC12_int_per_V = get_DAC12_int_per_V(serial, iDAC_index)
+  File "c:\data\compact_2012_git\Drivers\compact_2012\calib_prepare_lib.py", line 119, in get_DAC12_int_per_V
+    fDAC12_value = micropython_portable.convert_ADC24_signed_to_V(_iADC24_signed)
+  File "c:\data\compact_2012_git\Drivers\compact_2012\src_micropython\micropython_portable.py", line 136, in convert_ADC24_signed_to_V
+    raise Exception('fADC24={:12.9f} but should be between {:12.9f} and {:12.9f}.'.format(fADC24, -fADC24_LIMIT_V, fADC24_LIMIT_V))
+Exception: fADC24= 0.001064426 but should be between -0.000700000 and  0.000700000.
+PS C:\data\compact_2012_git>  c:; cd 'c:\data\compact_2012_git'; & 'C:\Users\maerki\AppData\Local\Programs\Python\Python37-32\python.exe' 'c:\Users\maerki\.vscode\extensions\ms-python.python-2021.4.765268190\pythonFiles\lib\python\debugpy\launcher' '58264' '--' 'c:\data\compact_2012_git\Drivers\compact_2012\calib_prepare_run.py' 
+Traceback (most recent call last):
+  File "C:\Users\maerki\AppData\Local\Programs\Python\Python37-32\lib\runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "C:\Users\maerki\AppData\Local\Programs\Python\Python37-32\lib\runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "c:\Users\maerki\.vscode\extensions\ms-python.python-2021.4.765268190\pythonFiles\lib\python\debugpy\__main__.py", line 45, in <module>    
+    cli.main()
+  File "c:\Users\maerki\.vscode\extensions\ms-python.python-2021.4.765268190\pythonFiles\lib\python\debugpy/..\debugpy\server\cli.py", line 444, in main
+    run()
+  File "c:\Users\maerki\.vscode\extensions\ms-python.python-2021.4.765268190\pythonFiles\lib\python\debugpy/..\debugpy\server\cli.py", line 285, in run_file
+    runpy.run_path(target_as_str, run_name=compat.force_str("__main__"))
+  File "C:\Users\maerki\AppData\Local\Programs\Python\Python37-32\lib\runpy.py", line 263, in run_path
+    pkg_name=pkg_name, script_name=fname)
+  File "C:\Users\maerki\AppData\Local\Programs\Python\Python37-32\lib\runpy.py", line 96, in _run_module_code
+    mod_name, mod_spec, pkg_name, script_name)
+  File "C:\Users\maerki\AppData\Local\Programs\Python\Python37-32\lib\runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "c:\data\compact_2012_git\Drivers\compact_2012\calib_prepare_run.py", line 7, in <module>
+    calib_prepare_lib.prepare_by_serial(serial='20200918_82')
+  File "c:\data\compact_2012_git\Drivers\compact_2012\calib_prepare_lib.py", line 147, in prepare_by_serial
+    f_DAC12_int_per_V = get_DAC12_int_per_V(serial, iDAC_index)
+  File "c:\data\compact_2012_git\Drivers\compact_2012\calib_prepare_lib.py", line 119, in get_DAC12_int_per_V
+    fDAC12_value = micropython_portable.convert_ADC24_signed_to_V(_iADC24_signed)
+  File "c:\data\compact_2012_git\Drivers\compact_2012\src_micropython\micropython_portable.py", line 136, in convert_ADC24_signed_to_V
+    raise Exception('fADC24={:12.9f} but should be between {:12.9f} and {:12.9f}.'.format(fADC24, -fADC24_LIMIT_V, fADC24_LIMIT_V))
+Exception: fADC24= 0.001064426 but should be between -0.000700000 and  0.000700000.
+PS C:\data\compact_2012_git> 
