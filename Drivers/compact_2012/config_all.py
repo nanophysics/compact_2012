@@ -58,6 +58,15 @@ ConfigCompact2012('20200918_74',
   # extension_right = 'empty'
 )
 
+ConfigCompact2012('20200918_75',
+  HARDWARE_VERSION='2020',
+  COMMENT='compact_2012_da'
+  # HV_amplifier = True
+  # Resolution_dac_12 = True
+  # extension_left = 'empty'
+  # extension_right = 'empty'
+)
+
 ConfigCompact2012('20200918_77',
   HARDWARE_VERSION='2020',
   COMMENT='compact_2012_da'
@@ -68,6 +77,15 @@ ConfigCompact2012('20200918_77',
 )
 
 ConfigCompact2012('20200918_78',
+  HARDWARE_VERSION='2020',
+  COMMENT='compact_2012_da'
+  # HV_amplifier = True
+  # Resolution_dac_12 = True
+  # extension_left = 'empty'
+  # extension_right = 'empty'
+)
+
+ConfigCompact2012('20200918_79',
   HARDWARE_VERSION='2020',
   COMMENT='compact_2012_da'
   # HV_amplifier = True
@@ -95,6 +113,15 @@ ConfigCompact2012('20200918_81',
 )
 
 ConfigCompact2012('20200918_83',
+  HARDWARE_VERSION='2020',
+  COMMENT='compact_2012_da, SUPPLY_+14V noise, aber ok'
+  # HV_amplifier = True
+  # Resolution_dac_12 = True
+  # extension_left = 'empty'
+  # extension_right = 'empty'
+)
+
+ConfigCompact2012('20200918_84',
   HARDWARE_VERSION='2020',
   COMMENT='compact_2012_da, SUPPLY_+14V noise, aber ok'
   # HV_amplifier = True
