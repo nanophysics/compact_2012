@@ -1,9 +1,11 @@
 import io
 import os
 
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
+try:
+    import numpy as np
+    import matplotlib.pyplot as plt
+except ImportError as e:
+    print(e)
 
 import src_micropython.micropython_portable as micropython_portable
 import compact_2012_dac
@@ -80,22 +82,6 @@ def find_solution(stepsize_V, f_dac_12_int_per_V):
 STEPSIZE_EXPECTED_MEAN_MIN_V = 17e-6
 STEPSIZE_EXPECTED_MEAN_V = 19e-6
 STEPSIZE_EXPECTED_MEAN_MAX_V = 21e-6
-
-def find_solution3(stepsize_V, do_plot=True):
-    mean_V = stepsize_V.mean()
-    assert STEPSIZE_EXPECTED_MEAN_MIN_V < mean_V < STEPSIZE_EXPECTED_MEAN_MAX_V, 'Expected a step of about 19uV but got {} V. Check the cabeling!'.format(mean_V)
-    stepsum_dac_12, stepsize_dac_12, correction_dac_12 = find_solution(stepsize_V)
-
-    if do_plot:
-        plt.plot(correction_dac_12)
-        plt.plot(stepsum_dac_12)
-        plt.plot(stepsum_dac_12+correction_dac_12)
-        plt.plot(np.ones_like(stepsize_dac_12) * dac_12_limit_h_dac_12)
-        plt.plot(np.ones_like(stepsize_dac_12) * dac_12_mid_dac_12)
-        plt.plot(np.ones_like(stepsize_dac_12) * dac_12_limit_l_dac_12)
-        plt.show()
-
-    return correction_dac_12
 
 def get_DAC12_int_per_V(serial, iDAC_index):
     filename = FILENAME_CALIB_RAW_TEMPLATE_DAC12.format(serial)

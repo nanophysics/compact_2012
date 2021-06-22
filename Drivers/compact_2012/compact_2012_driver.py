@@ -62,7 +62,7 @@ try:
 except ModuleNotFoundError as ex:
     raise Exception('The module "mpfshell2" is missing. Did you call "pip -r requirements.txt"?')
 
-REQUIRED_MPFSHELL_VERSION='100.9.10'
+REQUIRED_MPFSHELL_VERSION='100.9.12'
 if mp.version.FULL < REQUIRED_MPFSHELL_VERSION:
     raise Exception(f'Your "mpfshell" has version "{mp.version.FULL}" but should be higher than "{REQUIRED_MPFSHELL_VERSION}". Call "pip install --upgrade mpfshell2"!')
 
@@ -145,12 +145,55 @@ class Dac:
                 return str_gain.replace(CHANGE_BY_HAND, '')
         return '??? {:5.1f}'.format(self.f_gain)
 
+from mp.pyboard_query import Product, Identification
+
+class BoardQueryHwtypeSerial(mp.pyboard_query.BoardQueryBase):
+    '''
+    Selects pyboards with a 'config_identification.py' of given 'hwtype' AND 'hwserial'.
+    'hwtype' and 'hwserial' may be None
+    '''
+    def __init__(self, hwtype: str=None, hwserial: str=None, product: Product=Product.ANY):
+        super().__init__(product=product)
+        self.hwtype = hwtype
+        self.hwserial = hwserial
+ 
+    def select_pyserial(self, port):
+        return super().select_pyserial(port)
+ 
+    def select_identification(self, identification):
+        assert isinstance(identification, Identification)
+        if self.hwtype is not None:
+            if identification.HWTYPE != self.hwtype:
+                return False
+        if False:
+            if self.hwserial is not None:
+                if identification.HWSERIAL != self.hwserial:
+                    return False
+        return True
+ 
+    @property
+    def identification(self):
+        return f'pyboard(HWTYPE={self.hwtype}, HWSERIAL={self.hwserial})'
+
+        
 class Compact2012:
-    def __init__(self, board=None):
-        if board is None:
-            board = mp.pyboard_query.ConnectPyboard(hwtype=HWTYPE_COMPACT_2012)
-        assert isinstance(board, mp.pyboard_query.Board)
-        self.board = board
+    def __init__(self, hwserial=''):
+        hwserial = hwserial.strip()
+        if hwserial == '':
+            hwserial = None
+
+        if False:
+            self.board = mp.pyboard_query.ConnectPyboard(product=Product.Pyboard, hwtype=HWTYPE_COMPACT_2012)
+        if True:
+            # board = mp.pyboard_query.BoardQueryHwtypeSerial(hwtype=HWTYPE_COMPACT_2012, hwserial=hwserial)
+            query = BoardQueryHwtypeSerial(product=Product.Pyboard, hwtype=HWTYPE_COMPACT_2012, hwserial=hwserial)
+            # found = mp.pyboard_query.Connect([query])
+            found =  mp.pyboard_query.BoardQueryBase.connect([query])
+            if not found:
+                msg = f'Compact 2012 not found: {query.identification}'
+                raise Exception(msg)
+            self.board = query.board
+        assert isinstance(self.board, mp.pyboard_query.Board)
         self.board.systemexit_hwtype_required(hwtype=HWTYPE_COMPACT_2012)
         self.board.systemexit_firmware_required(min='1.14.0', max='1.14.0')
         self.compact_2012_serial = self.board.identification.HWSERIAL

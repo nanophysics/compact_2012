@@ -3,16 +3,7 @@ from src_micropython import micropython_portable
 import calib_prepare_lib
 
 if __name__ == '__main__':
-    if True:
-        calib_prepare_lib.prepare_by_serial(serial='20200918_84')
-
-    if False:
-        # random signal for testing
-        np.random.seed(0)
-        signallength = 1000
-        stepsize_V = np.random.randn(signallength) * 5e-6 + 19e-6
-
-        find_solution3(stepsize_V)
+    calib_prepare_lib.prepare_by_serial(serial='20200918_84')
 
     if False:
         filename = 'Drivers/compact_2012/calib_raw_dac0_2019-06-09a.txt'

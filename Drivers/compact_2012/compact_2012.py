@@ -9,11 +9,9 @@ class Driver(InstrumentDriver.InstrumentWorker):
 
     def performOpen(self, options={}):
         """Perform the operation of opening the instrument connection"""
-        # init object
-        self.compact2012 = None
 
         # open connection
-        self.compact2012 = compact_2012_driver.Compact2012() 
+        self.compact2012 = compact_2012_driver.Compact2012(hwserial=self.comCfg.address) 
     
         # Reset the usb connection (it must not change the applied voltages)
         self.log('ETH Compact Driver: Connection resetted at startup')
