@@ -1,6 +1,6 @@
 __pycache__
 .vscode/.ropeproject
-Drivers/compact_2012/calib_*_out.txt
-Drivers/compact_2012/Values-*.txt
-Drivers/compact_2012/calibration_correction/**/calib_raw_*
-Drivers/compact_2012/calibration_raw/
+calib_*_out.txt
+Values-*.txt
+calibration_correction/**/calib_raw_*
+calibration_raw/
