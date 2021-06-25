@@ -8,15 +8,10 @@ DA1=0.1 DA2=0.1
 
 '''
 import re
-import os
 import sys
-import pathlib
 import argparse
 import time
 
-DIRECTORY_OF_THIS_FILE=pathlib.Path(__file__).parent
-os.chdir(DIRECTORY_OF_THIS_FILE.parent.joinpath('Drivers/compact_2012'))
-sys.path.insert(0, '.')
 import compact_2012_driver
 
 reDA = re.compile(r'^DA(?P<channel>\d+)=(?P<voltage>[\d\.-]+)$')
