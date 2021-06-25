@@ -1,0 +1,25 @@
+Peter Maerki 2021-04-08_15_22_33
+
+Hatte beim Fehler bei 
+calib_prepare_run.py
+Traceback (most recent call last):
+  File "c:/data/compact_2012_git/Drivers/compact_2012/calib_prepare_run.py", line 7, in <module>
+    calib_prepare_lib.prepare_by_serial(serial='20200918_74')
+  File "c:\data\compact_2012_git\Drivers\compact_2012\calib_prepare_lib.py", line 147, in prepare_by_serial
+    f_DAC12_int_per_V = get_DAC12_int_per_V(serial, iDAC_index)
+  File "c:\data\compact_2012_git\Drivers\compact_2012\calib_prepare_lib.py", line 119, in get_DAC12_int_per_V
+    fDAC12_value = micropython_portable.convert_ADC24_signed_to_V(_iADC24_signed)
+  File "c:\data\compact_2012_git\Drivers\compact_2012\src_micropython\micropython_portable.py", line 136, in convert_ADC24_signed_to_V
+    raise Exception('fADC24={:12.9f} but should be between {:12.9f} and {:12.9f}.'.format(fADC24, -fADC24_LIMIT_V, fADC24_LIMIT_V))   
+Exception: fADC24=-0.000711911 but should be between -0.000700000 and  0.000700000.
+
+
+
+fADC24_LIMIT_V = 0.7e-3 # corresponds to +- 1.4V at the ADC24 input
+
+aenderte temporär
+fADC24_LIMIT_V = 0.8E-3 # corresponds to +- 1.4V at the ADC24 input, could work up to 1.6 V, but not shure
+
+sollte ja auch noch gehen.
+
+resultate kontrolliert, ok.

@@ -31,6 +31,15 @@ ConfigCompact2012('20191217_09',
   COMMENT='compact_2012_da_simplebox fuer Hansjuerg Schmutz'
 )
 
+ConfigCompact2012('20190606_02',
+  HARDWARE_VERSION='2020',
+  COMMENT='compact_2012_da'
+  # HV_amplifier = Unknown
+  # Resolution_dac_12 = True
+  # extension_left = 'empty'
+  # extension_right = 'empty'
+)
+
 ConfigCompact2012('20200918_72',
   HARDWARE_VERSION='2020',
   COMMENT='compact_2012_da'
@@ -51,7 +60,7 @@ ConfigCompact2012('20200918_73',
 
 ConfigCompact2012('20200918_74',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da'
+  COMMENT='compact_2012_da, kein calib step'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -123,8 +132,8 @@ ConfigCompact2012('20200918_83',
 
 ConfigCompact2012('20200918_84',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da, SUPPLY_+14V noise, aber ok'
-  # HV_amplifier = True
+  COMMENT='compact_2012_da'
+  # HV_amplifier = False
   # Resolution_dac_12 = True
   # extension_left = 'empty'
   # extension_right = 'empty'
