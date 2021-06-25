@@ -63,14 +63,21 @@ cd C:\Users\localadmin\Labber\Drivers\compact_2012\doc_installation
 
 "C:\Program Files\Labber\python-labber\Scripts\pip.exe" install --force-reinstall --no-cache-dir -r requirements.txt
 ```
-TODO This will install...
 
 There will be some warnings about *PATH*. You may ignore them.
 
 The last line should be `Successfully installed ... mpfshell2-100.9.13 ...`!
 
-### Configure the compact_2021 in the Labber Instrument Server
+Above command will install the required python libraries in `C:\Program Files\Labber\python-labber` (Labber 64bit Python).
+
+## Configure the compact_2012 in the Labber Instrument Server
 
 Start the Labber Instrument Server and choose menu `Edit -> Add...`
 
 ![LABBER ADD](images/installation_labber_add.png "LABBER ADD")
+
+## Update the compact_2012 driver and calibration data
+
+The driver AND the calibration data is stored in the git repository located at `<LABBERLOCALDRIVERS>\compact_2012`.
+
+Double click `<LABBERLOCALDRIVERS>\compact_2012\run_git_pull.bat` to pull the newest version.
