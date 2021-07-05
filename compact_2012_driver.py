@@ -146,11 +146,16 @@ class Dac:
         return '??? {:5.1f}'.format(self.f_gain)
 
 class Compact2012:
-    def __init__(self, hwserial=''):
-        hwserial = hwserial.strip()
-        if hwserial == '':
-            hwserial = None
-        self.board = mp.pyboard_query.ConnectHwtypeSerial(product=mp.pyboard_query.Product.Pyboard, hwtype=HWTYPE_COMPACT_2012, hwserial=hwserial)
+    def __init__(self, board=None, hwserial=''):
+        if board is not None:
+            assert hwserial == ''
+            self.board = board
+        else:
+            assert board is None
+            hwserial = hwserial.strip()
+            if hwserial == '':
+                hwserial = None
+            self.board = mp.pyboard_query.ConnectHwtypeSerial(product=mp.pyboard_query.Product.Pyboard, hwtype=HWTYPE_COMPACT_2012, hwserial=hwserial)
         assert isinstance(self.board, mp.pyboard_query.Board)
         self.board.systemexit_hwtype_required(hwtype=HWTYPE_COMPACT_2012)
         self.board.systemexit_firmware_required(min='1.14.0', max='1.14.0')
