@@ -40,6 +40,15 @@ ConfigCompact2012('20190606_02',
   # extension_right = 'empty'
 )
 
+ConfigCompact2012('20200918_71',
+  HARDWARE_VERSION='2020',
+  COMMENT='compact_2012_da, kein calib step'
+  # HV_amplifier = True
+  # Resolution_dac_12 = True
+  # extension_left = 'empty'
+  # extension_right = 'empty'
+)
+
 ConfigCompact2012('20200918_72',
   HARDWARE_VERSION='2020',
   COMMENT='compact_2012_da'
@@ -68,6 +77,15 @@ ConfigCompact2012('20200918_74',
 )
 
 ConfigCompact2012('20200918_75',
+  HARDWARE_VERSION='2020',
+  COMMENT='compact_2012_da'
+  # HV_amplifier = True
+  # Resolution_dac_12 = True
+  # extension_left = 'empty'
+  # extension_right = 'empty'
+)
+
+ConfigCompact2012('20200918_76',
   HARDWARE_VERSION='2020',
   COMMENT='compact_2012_da'
   # HV_amplifier = True

@@ -3,7 +3,7 @@ from src_micropython import micropython_portable
 import calib_prepare_lib
 
 if __name__ == '__main__':
-    calib_prepare_lib.prepare_by_serial(serial='20200918_84')
+    calib_prepare_lib.prepare_by_serial(serial='20200918_76')
 
     if False:
         filename = 'Drivers/compact_2012/calib_raw_dac0_2019-06-09a.txt'
