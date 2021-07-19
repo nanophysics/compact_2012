@@ -1,0 +1,79 @@
+Datum: Mon, 28 Jun 2021 09:51:11 +0200
+Von: Christoph Adam <adamc@phys.ethz.ch>
+An: pmaerki@phys.ethz.ch
+
+Lieber Peter,
+
+wir haben die Compacts getestet mit folgendem Ergebnis (Compact_1st ist
+normalerweise mit Adresse 20200918_72 und Compact_2nd mit 20200918_84):
+
+
+Szenario 1)
+a) irgendeinen Compact OHNE Adresse hinzufuegen, wenn beide angesteckt
+sind
+Response 100.9.15:
+  a) adding fails
+  => GOOD
+Response 100.9.16:
+  a) adding fails. Exception: Boardquery 'pyboard(HWTYPE=compact_2012, HWSERIAL=None)' matches 2 times.
+  => GOOD
+
+
+Szenario 2)
+a) Compact_1st MIT Adresse anmelden und starten:
+b) Compact_2nd OHNE Adresse anmelden und starten:
+Response 100.9.15
+  a) starting 1st works
+  b) starting 2nd works
+  => BAD
+Response 100.9.16
+  a) starting 1st works
+  b) starting 2nd works
+  => GOOD
+
+
+Szenario 3)
+a) Compact_2nd MIT Adresse anmelden und starten
+b) Compact_1st OHNE Adresse anmelden und starten
+Response 100.9.15
+  a) starting 2nd works
+  b) starting 1st fails
+  => GOOD
+Response 100.9.16
+  a) starting 1st works
+  b) starting 2nd works
+  => GOOD
+
+
+Szenario 4)
+a) Compact_1st MIT Adresse anmelden und starten
+b) Compact_2nd MIT Adresse anmelden und starten
+Response 100.9.15
+  a) starting 1st works
+  b) starting 2nd works
+  => GOOD
+Response 100.9.16
+  a) starting 1st works
+  b) starting 2nd works
+  => GOOD
+
+
+Szenario 5)
+a) Compact_2nd MIT Adresse anmelden und starten
+b) Compact_1st MIT Adresse anmelden und starten
+Response 100.9.15
+  a) starting 2nd works
+  b) starting 1st fails
+  => BAD
+Response 100.9.16
+  a) starting 2nd works
+  b) starting 1st works
+  => GOOD
+
+
+Es scheint noch nicht ganz so zu funktionieren wie geplant, besonders
+Szenario 5).
+
+
+Liebe Gruesse,
+Christoph
