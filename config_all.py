@@ -42,7 +42,7 @@ ConfigCompact2012('20190606_02',
 
 ConfigCompact2012('20200918_71',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da, kein calib step'
+  COMMENT='compact_2012_da, kein calib step, da_out -10V etwas grosse steps'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -51,7 +51,7 @@ ConfigCompact2012('20200918_71',
 
 ConfigCompact2012('20200918_72',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da'
+  COMMENT='compact_2012_da, gut, wenig flicker'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -60,7 +60,7 @@ ConfigCompact2012('20200918_72',
 
 ConfigCompact2012('20200918_73',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da'
+  COMMENT='compact_2012_da, todo quality comment'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -69,7 +69,7 @@ ConfigCompact2012('20200918_73',
 
 ConfigCompact2012('20200918_74',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da, kein calib step'
+  COMMENT='compact_2012_da, kein calib step, SUPPLY_+14V etwas zu tief, akzept.'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -78,7 +78,7 @@ ConfigCompact2012('20200918_74',
 
 ConfigCompact2012('20200918_75',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da'
+  COMMENT='compact_2012_da, SUPPLY_+14V zappelt etwas aber ok'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -87,7 +87,7 @@ ConfigCompact2012('20200918_75',
 
 ConfigCompact2012('20200918_76',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da'
+  COMMENT='compact_2012_da, knapp ueber einigen rauschgrenzen aber ok'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -96,7 +96,7 @@ ConfigCompact2012('20200918_76',
 
 ConfigCompact2012('20200918_77',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da'
+  COMMENT='compact_2012_da, todo quali comment'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -105,7 +105,7 @@ ConfigCompact2012('20200918_77',
 
 ConfigCompact2012('20200918_78',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da'
+  COMMENT='compact_2012_da,HV_OUT_DIR_+100V CH11 stepsize ueberschritten, aber ok'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -114,7 +114,7 @@ ConfigCompact2012('20200918_78',
 
 ConfigCompact2012('20200918_79',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da'
+  COMMENT='compact_2012_da, SUPPLY_+14V rumpelt, aber ok'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -132,7 +132,7 @@ ConfigCompact2012('20200918_80',
 
 ConfigCompact2012('20200918_81',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da'
+  COMMENT='compact_2012_da, SUPPLY_+14V rumpelt, CH11 etwas grosse steps aber ok'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
