@@ -150,7 +150,7 @@ ConfigCompact2012('20200918_83',
 
 ConfigCompact2012('20200918_84',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da'
+  COMMENT='compact_2012_da, SUPPLY_+14V noise, aber ok'
   # HV_amplifier = False
   # Resolution_dac_12 = True
   # extension_left = 'empty'
