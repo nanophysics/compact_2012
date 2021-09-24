@@ -42,7 +42,7 @@ ConfigCompact2012('20190606_02',
 
 ConfigCompact2012('20200918_71',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da, kein calib step, da_out -10V etwas grosse steps'
+  COMMENT='compact_2012_da, kein calib step, da_out -10V etwas grosse steps, urs_second'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -51,11 +51,11 @@ ConfigCompact2012('20200918_71',
 
 ConfigCompact2012('20200918_72',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da, gut, wenig flicker'
+  COMMENT='compact_2012_da, gut, wenig flicker, bigmom_first'
   # HV_amplifier = True
   # Resolution_dac_12 = True
-  # extension_left = 'empty'
-  # extension_right = 'empty'
+  # extension_left = 'compact_2012_iv_2015'
+  # extension_right = 'compact_2012_iv_2015'
 )
 
 ConfigCompact2012('20200918_73',
@@ -69,7 +69,7 @@ ConfigCompact2012('20200918_73',
 
 ConfigCompact2012('20200918_74',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da, kein calib step, SUPPLY_+14V etwas zu tief, akzept.'
+  COMMENT='compact_2012_da, SUPPLY_+14V etwas zu tief, akzept. urs_first'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -105,7 +105,7 @@ ConfigCompact2012('20200918_77',
 
 ConfigCompact2012('20200918_78',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da,HV_OUT_DIR_+100V CH11 stepsize ueberschritten, aber ok'
+  COMMENT='compact_2012_da,HV_OUT_DIR_+100V CH11 stepsize ueberschritten, aber ok, christian_odin'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -132,7 +132,16 @@ ConfigCompact2012('20200918_80',
 
 ConfigCompact2012('20200918_81',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da, SUPPLY_+14V rumpelt, CH11 etwas grosse steps aber ok'
+  COMMENT='compact_2012_da, SUPPLY_+14V rumpelt, CH11 etwas grosse steps aber ok, christian_loki'
+  # HV_amplifier = True
+  # Resolution_dac_12 = True
+  # extension_left = 'compact_2012_iv_2015'
+  # extension_right = 'compact_2012_iv_2015'
+)
+
+ConfigCompact2012('20200918_82',
+  HARDWARE_VERSION='2020',
+  COMMENT='compact_2012_da, kein calib step'
   # HV_amplifier = True
   # Resolution_dac_12 = True
   # extension_left = 'empty'
@@ -150,9 +159,9 @@ ConfigCompact2012('20200918_83',
 
 ConfigCompact2012('20200918_84',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da, SUPPLY_+14V noise, aber ok'
+  COMMENT='compact_2012_da, SUPPLY_+14V noise, aber ok, bigmom_second'
   # HV_amplifier = False
   # Resolution_dac_12 = True
-  # extension_left = 'empty'
-  # extension_right = 'empty'
+  # extension_left = 'compact_2012_iv_2015'
+  # extension_right = 'compact_2012_iv_2015'
 )
