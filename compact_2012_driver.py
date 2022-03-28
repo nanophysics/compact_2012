@@ -227,7 +227,7 @@ class Compact2012:
             f.write('{}\n'.format(str_date_time))
             f.write('''compact_2012
 While measuring with Labber, this file is written every {} seconds. If you delete this file, Labber will write it again.
-When Labber crashes and the instrument server looses the values, you may manually copy and past the values from this file to the instrument server config. Set cfg. Then start instrument server.
+When Labber crashes and the instrument server loses the values, you may manually copy and paste the values from this file to the instrument server config. Set cfg. Then start instrument server.
 Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(SAVE_VALUES_TO_DISK_TIME_S))
             for obj_Dac in self.list_dacs:
                 f.write('DA{} {:8.8f} V     (range, jumper, {})\n'.format(obj_Dac.index+1, obj_Dac.f_value_V*obj_Dac.f_gain, obj_Dac.get_gain_string()))
