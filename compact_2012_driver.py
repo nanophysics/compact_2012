@@ -136,7 +136,7 @@ class TimeSpan:
 class Dac:
     def __init__(self, index):
         self.index = index
-        self.f_value_V = 0.0
+        self.f_value_V:float = None
         self.f_gain = 1.0
 
     def get_gain_string(self):
@@ -227,7 +227,7 @@ class Compact2012:
             f.write('{}\n'.format(str_date_time))
             f.write('''compact_2012
 While measuring with Labber, this file is written every {} seconds. If you delete this file, Labber will write it again.
-You can use this values when Labber crashes and you do not know how to go on.
+When Labber crashes and the instrument server looses the values, you may manually copy and past the values from this file to the instrument server config. Set cfg. Then start instrument server.
 Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(SAVE_VALUES_TO_DISK_TIME_S))
             for obj_Dac in self.list_dacs:
                 f.write('DA{} {:8.8f} V     (range, jumper, {})\n'.format(obj_Dac.index+1, obj_Dac.f_value_V*obj_Dac.f_gain, obj_Dac.get_gain_string()))
@@ -237,6 +237,8 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
            Returns the current Voltage
         '''
         assert 0 <= index < DACS_COUNT
+        if self.list_dacs[index].f_value_V is None:
+            return 0.0
         return self.list_dacs[index].f_value_V
 
     def __calculate_and_set_new_dac(self, dict_requested_values):
@@ -257,6 +259,11 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
             f_DA_OUT_sweep_VperSecond = d.get('f_DA_OUT_sweep_VperSecond', 0.0)
 
             def get_actual_DA_OUT_V():
+                if obj_Dac.f_value_V is None:
+                    # None: Labber just started.
+                    # We assume that we where on this volatge before.
+                    obj_Dac.f_value_V = f_DA_OUT_desired_V
+
                 return obj_Dac.f_value_V*f_gain
 
             def set_new_DA_OUT_V(f_value_v):
