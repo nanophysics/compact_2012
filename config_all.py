@@ -21,6 +21,15 @@ ConfigCompact2012(SERIAL_UNDEFINED,
   COMMENT='Serial not defined, hardware unknown! Assuming a bare micropython board.'
 )
 
+ConfigCompact2012('20140711_01',
+  HARDWARE_VERSION='2014',
+  COMMENT='compact_2012_da'
+  # HV_amplifier = True
+  # Resolution_dac_12 = False
+  # extension_left = '20150811_07'
+  # extension_right = '20150709_01'
+)
+
 ConfigCompact2012('20190606_01',
   HARDWARE_VERSION='2019',
   COMMENT='Prototype for the Compact_2012 series of 2019'
