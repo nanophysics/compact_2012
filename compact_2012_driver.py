@@ -135,8 +135,10 @@ class TimeSpan:
 
 class Dac:
     def __init__(self, index):
+        # This is 'False' till we get our correct value from Labber.
+        self.b_initialized = False
         self.index = index
-        self.f_value_V:float = None
+        self.f_value_V:float = 0.0
         self.f_gain = 1.0
 
     def get_gain_string(self):
@@ -176,7 +178,7 @@ class Compact2012:
         self.ignore_str_dac12 = False
         self.f_write_file_time_s = 0.0
         self.filename_values = DIRECTORY_OF_THIS_FILE / f'Values-{self.compact_2012_serial}.txt'
-        self.list_dacs = list(map(lambda i: Dac(i), range(DACS_COUNT)))
+        self.list_dacs = [Dac(i) for i in range(DACS_COUNT)]
 
         self.obj_time_span_set_dac = TimeSpan(100, 'set_dac()')
         self.obj_time_span_get_status = TimeSpan(100, 'get_status()')
@@ -237,9 +239,10 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
            Returns the current Voltage
         '''
         assert 0 <= index < DACS_COUNT
-        if self.list_dacs[index].f_value_V is None:
-            return 0.0
-        return self.list_dacs[index].f_value_V
+        obj_Dac = self.list_dacs[index]
+        if obj_Dac.b_initialized:
+            return obj_Dac.f_value_V
+        return 0.0
 
     def __calculate_and_set_new_dac(self, dict_requested_values):
         '''
@@ -259,9 +262,10 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
             f_DA_OUT_sweep_VperSecond = d.get('f_DA_OUT_sweep_VperSecond', 0.0)
 
             def get_actual_DA_OUT_V():
-                if obj_Dac.f_value_V is None:
+                if not obj_Dac.b_initialized:
                     # None: Labber just started.
                     # We assume that we where on this volatge before.
+                    obj_Dac.b_initialized = True
                     obj_Dac.f_value_V = f_DA_OUT_desired_V
 
                 return obj_Dac.f_value_V*f_gain
@@ -346,7 +350,7 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
             Send to new dac values to the pyboard.
             Return pyboard_status.
         '''
-        f_values_plus_min_v = list(map(lambda obj_Dac: obj_Dac.f_value_V, self.list_dacs))
+        f_values_plus_min_v = [objDac.f_value_V for obj_Dac in self.list_dacs if obj_Dac.b_initialized]
         str_dac20, str_dac12 = compact_2012_dac.getDAC20DAC12HexStringFromValues(f_values_plus_min_v, calibrationLookup=self.__calibrationLookup)
         if self.ignore_str_dac12:
             str_dac12 = '0'*DACS_COUNT*DAC12_NIBBLES
