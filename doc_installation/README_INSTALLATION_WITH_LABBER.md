@@ -59,14 +59,14 @@ cd compact_2012
 
 Run `cmd.exe` below as **Administrator**.
 ```bash
-cd C:\Users\localadmin\Labber\Drivers\compact_2012\doc_installation
+cd C:\Users\localadmin\Labber\Drivers\compact_2012
 
 "C:\Program Files\Labber\python-labber\Scripts\pip.exe" install --force-reinstall --no-cache-dir -r requirements.txt
 ```
 
 There will be some warnings about *PATH*. You may ignore them.
 
-The last line should be `Successfully installed ... mpfshell2-100.9.13 ...`!
+The last line should be `Successfully installed ...`!
 
 Above command will install the required python libraries in `C:\Program Files\Labber\python-labber` (Labber 64bit Python).
 

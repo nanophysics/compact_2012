@@ -350,7 +350,7 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
             Send to new dac values to the pyboard.
             Return pyboard_status.
         '''
-        f_values_plus_min_v = [objDac.f_value_V for obj_Dac in self.list_dacs if obj_Dac.b_initialized]
+        f_values_plus_min_v = [obj_Dac.f_value_V for obj_Dac in self.list_dacs if obj_Dac.b_initialized]
         str_dac20, str_dac12 = compact_2012_dac.getDAC20DAC12HexStringFromValues(f_values_plus_min_v, calibrationLookup=self.__calibrationLookup)
         if self.ignore_str_dac12:
             str_dac12 = '0'*DACS_COUNT*DAC12_NIBBLES
