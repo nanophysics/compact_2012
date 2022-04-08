@@ -40,7 +40,7 @@ def getOtherDAC(iDac_index0):
         dictDacFix[i+1] = i
     return dictDacFix[iDac_index0]
 
-if __name__ == '__main__':
+def main():
     driver = compact_2012_driver.Compact2012()
     driver.sync_set_geophone_led_threshold_percent_FS(10.0)
     driver.sync_calib_raw_init()
@@ -99,20 +99,20 @@ if __name__ == '__main__':
                             'f_gain': 1.0,
                         }
                     }
-                    b_done, dict_changed_values = driver.sync_dac_set_all(dict_requested_values)
+                    _b_done, _dict_changed_values = driver.sync_dac_set_all(dict_requested_values)
 
                     # Wait to settle
                     if bFast:
-                      time.sleep(0.01)
+                        time.sleep(0.01)
                     else:
-                      time.sleep(0.03)
+                        time.sleep(0.03)
 
                     # Read from ADC
                     fADC24_V = 0.0
                     MEASUREMENTS = 10
                     if bFast:
                         MEASUREMENTS = 1
-                    for i in range(MEASUREMENTS):
+                    for _i in range(MEASUREMENTS):
                         _iADC24, _fADC24_V = driver.sync_calib_read_ADC24(iDacDUT_index0)
                         fADC24_V += _fADC24_V
 
@@ -139,3 +139,6 @@ if __name__ == '__main__':
                 print()
 
     driver.close()
+
+if __name__ == '__main__':
+    main()

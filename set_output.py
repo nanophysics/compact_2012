@@ -34,6 +34,8 @@ def parse_arguments():
         sys.exit()
 
     dictVoltages = {}
+    for channel0 in range(CHANNEL_COUNT):
+        dictVoltages[channel0] = {'f_DA_OUT_desired_V': 0.0, 'f_gain': 1.0 }
     for arg_string in args.voltages:
         match = reDA.match(arg_string)
         if match is None:
