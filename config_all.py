@@ -105,11 +105,11 @@ ConfigCompact2012('20200918_76',
 
 ConfigCompact2012('20200918_77',
   HARDWARE_VERSION='2020',
-  COMMENT='compact_2012_da, todo quali comment'
+  COMMENT='compact_2012_da, HV amp sometimes spikes, CH14 is the best'
   # HV_amplifier = True
   # Resolution_dac_12 = True
-  # extension_left = 'empty'
-  # extension_right = 'empty'
+  # extension_left = 'iv_2015 SN 20200511_40'
+  # extension_right = 'iv_2015 SN 20200511_42'
 )
 
 ConfigCompact2012('20200918_78',
