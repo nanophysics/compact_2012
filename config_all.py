@@ -124,19 +124,21 @@ ConfigCompact2012('20200918_78',
 ConfigCompact2012('20200918_79',
   HARDWARE_VERSION='2020',
   COMMENT='compact_2012_da, SUPPLY_+14V rumpelt, aber ok'
+  # sofia_first
   # HV_amplifier = True
   # Resolution_dac_12 = True
-  # extension_left = 'empty'
-  # extension_right = 'empty'
+  # extension_left = 'iv_2015 SN 20200511_35'
+  # extension_right = 'iv_2015 SN 20200511_36'
 )
 
 ConfigCompact2012('20200918_80',
   HARDWARE_VERSION='2020',
   COMMENT='compact_2012_da'
+  # tabea_first
   # HV_amplifier = True
   # Resolution_dac_12 = True
-  # extension_left = 'empty'
-  # extension_right = 'empty'
+  # extension_left = 'iv_2015 SN 20200511_37'
+  # extension_right = 'iv_2015 SN 20200511_38'
 )
 
 ConfigCompact2012('20200918_81',
