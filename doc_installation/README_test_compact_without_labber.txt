@@ -1,22 +1,4 @@
-# Installation on PC
-
-Tested on Windows 10, Windows 7 and with the versions shown below.
-
-python:
-we use: https://www.python.org/downloads/release/python-397/ python 3.9.7 64 bit Windows installer (64-bit) install using defaults
-
-git:
-https://git-scm.com/download/win install using defaults
-
-start cmd.exe
-
-```
-python -m pip install --upgrade pip
-cd C:\data\temp        (for example, choose yourself)
-git clone --recurse-submodules https://github.com/nanophysics/compact_2012.git
-cd compact_2012
-python -m pip install -r requirements.txt
-```
+# Use the compact driver without labber
 
 ## Simple, set voltage with comand line
 
