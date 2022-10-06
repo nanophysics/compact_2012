@@ -1,4 +1,4 @@
-# Installation of Labber Driver for heater_thermometrie_2021
+# Installation of Labber Driver
 
 **IMPORTANT** This document describes the installation for these projects
 
