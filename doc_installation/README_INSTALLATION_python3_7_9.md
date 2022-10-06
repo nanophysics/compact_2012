@@ -64,7 +64,7 @@ Labber Instrument Server Window -> Edit -> Preferences -> Advanced -> Python dis
 
 [README_INSTALLATION_git.md](README_INSTALLATION_git.md)
 
-## Install heater_thermometrie_2021 labber driver
+## Install labber driver
 
 ### Clone git repository
 
@@ -95,13 +95,13 @@ There will be some warnings about *PATH*. You may ignore them.
 The last line should be `Successfully installed ... mpfshell2-100.9.xx ...`!
 
 
-## Configure the heater_thermometrie_2021 in the Labber Instrument Server
+## Configure the driver in the Labber Instrument Server
 
 Start the Labber Instrument Server and choose menu `Edit -> Add...`
 
 ![LABBER ADD](images/installation_labber_add.png "LABBER ADD")
 
-## Update the heater_thermometrie_2021 driver and calibration data
+## Update the driver and calibration data
 
 The driver AND the calibration data is stored in the git repository located at `<LABBERLOCALDRIVERS>\heater_thermometrie_2021`.
 
