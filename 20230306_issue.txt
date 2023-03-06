@@ -1,0 +1,10 @@
+Peter Maerki 2023-03-06_21_36_32
+
+Michele misst. Spannungen werden nicht übernommen. -9.999V.
+Power compact weg, usb ausstecken. 0V fix.
+Nochmals. -9.9999V fix.
+Anderer compact einstecken. Gleiches verhalten. -9.999V auf allen Kanälen.
+Im treiber ist keine SN konfiguriert weil nur ein einzelner compact dran hängt.
+
+Im instrument server den compact remove. Neu adden. Jetzt geht es. 
+Sehr komisch.
