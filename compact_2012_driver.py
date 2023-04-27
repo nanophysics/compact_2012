@@ -145,19 +145,20 @@ class Dac:
 
 class Compact2012:
     def __init__(self, board=None, hwserial=''):
-        if board is not None:
-            assert hwserial == ''
-            self.board = board
-        else:
-            assert board is None
-            hwserial = hwserial.strip()
-            if hwserial == '':
-                hwserial = None
-            self.board = mp.pyboard_query.ConnectHwtypeSerial(product=mp.pyboard_query.Product.Pyboard, hwtype=HWTYPE_COMPACT_2012, hwserial=hwserial)
-        assert isinstance(self.board, mp.pyboard_query.Board)
-        self.board.systemexit_hwtype_required(hwtype=HWTYPE_COMPACT_2012)
-        self.board.systemexit_firmware_required(min='1.14.0', max='1.14.0')
-        self.compact_2012_serial = self.board.identification.HWSERIAL
+        # if board is not None:
+        #     assert hwserial == ''
+        #     self.board = board
+        # else:
+        #     assert board is None
+        #     hwserial = hwserial.strip()
+        #     if hwserial == '':
+        #         hwserial = None
+        #     self.board = mp.pyboard_query.ConnectHwtypeSerial(product=mp.pyboard_query.Product.Pyboard, hwtype=HWTYPE_COMPACT_2012, hwserial=hwserial)
+        # assert isinstance(self.board, mp.pyboard_query.Board)
+        # self.board.systemexit_hwtype_required(hwtype=HWTYPE_COMPACT_2012)
+        # self.board.systemexit_firmware_required(min='1.14.0', max='1.14.0')
+        # self.compact_2012_serial = self.board.identification.HWSERIAL
+        self.compact_2012_serial = "20200918_84"
         try:
             self.compact_2012_config = config_all.dict_compact2012[self.compact_2012_serial]
         except KeyError:
@@ -187,6 +188,7 @@ class Compact2012:
         self.i_pyboard_geophone_dac = 0
         self.f_pyboard_geophone_read_s = 0
 
+        return
         self.shell = self.board.mpfshell
         self.fe = self.shell.MpFileExplorer
         # Download the source code
@@ -198,7 +200,7 @@ class Compact2012:
 
     def close(self):
         self.save_values_to_file()
-        self.fe.close()
+        # self.fe.close()
 
     def load_calibration_lookup(self):
         if self.compact_2012_serial is None:
@@ -351,12 +353,17 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
                 print('INFO: Not all dac values initialized. ...Wait for labber to set all values...')
                 return
         f_values_plus_min_v = [obj_Dac.f_value_V for obj_Dac in self.list_dacs]
+        print(f"***** f_values_plus_min_v={f_values_plus_min_v}")
+        logger.info(f"***** f_values_plus_min_v={f_values_plus_min_v}")
         str_dac20, str_dac12 = compact_2012_dac.getDAC20DAC12HexStringFromValues(f_values_plus_min_v, calibrationLookup=self.__calibrationLookup)
         if self.ignore_str_dac12:
             str_dac12 = '0'*DACS_COUNT*DAC12_NIBBLES
         s_py_command = 'micropython_logic.set_dac("{}", "{}")'.format(str_dac20, str_dac12)
         self.obj_time_span_set_dac.start()
 
+        # print(f"***** s_py_command={s_py_command}")
+        # logger.info(f"***** s_py_command={s_py_command}")
+        return
         str_status = self.fe.eval(s_py_command)
 
         self.obj_time_span_set_dac.end()
@@ -382,6 +389,7 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
 
     def sync_set_user_led(self, on):
         assert isinstance(on, bool)
+        return
         self.fe.eval('micropython_logic.set_user_led({})'.format(on))
 
     def sync_set_geophone_led_threshold_percent_FS(self, threshold_percent_FS):
@@ -389,7 +397,7 @@ Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(
         assert 0.0 <= threshold_percent_FS <= 100.0
         threshold_dac = threshold_percent_FS*4096.0//100.0
         assert 0.0 <= threshold_dac <= 4096
-        self.fe.eval('micropython_logic.set_geophone_threshold_dac({})'.format(threshold_dac))
+        # self.fe.eval('micropython_logic.set_geophone_threshold_dac({})'.format(threshold_dac))
 
     def debug_geophone_print(self):
         print('geophone:                      dac={:016b}={:04d} [0..4095], voltage={:06f}mV, percent={:04.01f}'.format(self.i_pyboard_geophone_dac, self.i_pyboard_geophone_dac, self.__read_geophone_voltage(), self.get_geophone_percent_FS()))
