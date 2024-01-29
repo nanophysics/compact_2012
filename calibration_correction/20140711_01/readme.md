@@ -1,0 +1,1 @@
+Old compact, has no DAC12 and therefore no calibration file.

@@ -30,6 +30,15 @@ ConfigCompact2012('20140711_01',
   # extension_right = '20150709_01'
 )
 
+ConfigCompact2012('20150530_10',
+  HARDWARE_VERSION='2014',
+  COMMENT='compact_2012_da'
+  # HV_amplifier = False
+  # Resolution_dac_12 = False
+  # extension_left = ''
+  # extension_right = ''
+)
+
 ConfigCompact2012('20190606_01',
   HARDWARE_VERSION='2019',
   COMMENT='Prototype for the Compact_2012 series of 2019'

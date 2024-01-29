@@ -14,6 +14,8 @@ if __name__ == '__main__':
     driver = compact_2012_driver.Compact2012()
     driver.sync_set_geophone_led_threshold_percent_FS(5.0)
 
+    driver.sync_set_user_led(True)
+    
     if True:
         while(True):
             Spannung = float(input("Spannung -10 bis 10 V? "))
