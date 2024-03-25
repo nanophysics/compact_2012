@@ -3,7 +3,6 @@ Set the output voltage.
 It assumes the the jumpers are set to +/- 10V
 --help
 
---com=10
 DA1=0.1 DA2=0.1
 
 '''
@@ -18,7 +17,7 @@ CHANNEL_COUNT=10
 
 DESCRIPTION=f'''Set the output voltage.
 It assumes the the jumpers are set to +/- 10V.
-Example {__file__} --COM=5 DA1=1.1 DA2=3.5
+Example {__file__} DA1=1.1 DA2=3.5
 '''
 def parse_arguments():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
