@@ -39,6 +39,42 @@ ConfigCompact2012('20150530_10',
   # extension_right = ''
 )
 
+ConfigCompact2012('20150530_11',
+  HARDWARE_VERSION='2014',
+  COMMENT='compact_2012_da'
+  # HV_amplifier = True
+  # Resolution_dac_12 = False
+  # extension_left = ''
+  # extension_right = ''
+)
+
+ConfigCompact2012('20150530_12',
+  HARDWARE_VERSION='2014',
+  COMMENT='compact_2012_da'
+  # HV_amplifier = True
+  # Resolution_dac_12 = False
+  # extension_left = ''
+  # extension_right = ''
+)
+
+ConfigCompact2012('20150530_13',
+  HARDWARE_VERSION='2014',
+  COMMENT='compact_2012_da'
+  # HV_amplifier = True
+  # Resolution_dac_12 = False
+  # extension_left = ''
+  # extension_right = ''
+)
+
+ConfigCompact2012('20150530_14',
+  HARDWARE_VERSION='2014',
+  COMMENT='compact_2012_da'
+  # HV_amplifier = True
+  # Resolution_dac_12 = False
+  # extension_left = ''
+  # extension_right = ''
+)
+
 ConfigCompact2012('20190606_01',
   HARDWARE_VERSION='2019',
   COMMENT='Prototype for the Compact_2012 series of 2019'
