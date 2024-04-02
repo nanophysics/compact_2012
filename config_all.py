@@ -21,6 +21,18 @@ ConfigCompact2012(SERIAL_UNDEFINED,
   COMMENT='Serial not defined, hardware unknown! Assuming a bare micropython board.'
 )
 
+
+
+ConfigCompact2012('20121111_01',
+  HARDWARE_VERSION='2012',
+  COMMENT='compact_2012_da'
+  # Very first working compact, einige Korrekturen auf Leiterplatte.
+  # HV_amplifier = False
+  # Resolution_dac_12 = False
+  # extension_left = ''
+  # extension_right = ''
+)
+
 ConfigCompact2012('20140711_01',
   HARDWARE_VERSION='2014',
   COMMENT='compact_2012_da'

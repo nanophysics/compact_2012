@@ -15,7 +15,7 @@ Example, one compact_2012 only, searches the com port automatically
 Example, one or more compact_2012, com port defined and therefore faster.
 You can find the com port in the device manager.
 
-```python set_output.py --com 14 DA4=0.333 DA5=0.533 DA10=9.976```
+```python set_output.py DA4=0.333 DA5=0.533 DA10=9.976```
 
 ## Set voltages fast:
 Write your own program, similar to set_output.py
