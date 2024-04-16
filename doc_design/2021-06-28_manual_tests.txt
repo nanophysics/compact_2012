@@ -1,8 +1,5 @@
 Datum: Mon, 28 Jun 2021 09:51:11 +0200
-Von: Christoph Adam <adamc@phys.ethz.ch>
-An: pmaerki@phys.ethz.ch
-
-Lieber Peter,
+Christoph an Peter
 
 wir haben die Compacts getestet mit folgendem Ergebnis (Compact_1st ist
 normalerweise mit Adresse 20200918_72 und Compact_2nd mit 20200918_84):
