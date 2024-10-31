@@ -226,7 +226,8 @@ class Compact2012:
             f.write('''compact_2012
 While measuring with Labber, this file is written every {} seconds. If you delete this file, Labber will write it again.
 When Labber crashes and the instrument server loses the values, you may manually copy and paste the values from this file to the instrument server config. Set cfg. Then start instrument server.
-Voltages: physical values in volt; the voltage at the OUT output.\n\n'''.format(SAVE_VALUES_TO_DISK_TIME_S))
+Voltages: physical values in volt; the voltage at the OUT output.\n
+Details: https://github.com/nanophysics/compact_2012/blob/master/doc_installation/README_recovery_crash.md\n\n'''.format(SAVE_VALUES_TO_DISK_TIME_S))
             for obj_Dac in self.list_dacs:
                 f.write('DA{} {:8.8f} V     (range, jumper, {})\n'.format(obj_Dac.index+1, obj_Dac.f_value_V*obj_Dac.f_gain, obj_Dac.get_gain_string()))
 
