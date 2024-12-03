@@ -197,7 +197,7 @@ class Compact2012:
         self.load_calibration_lookup()
 
     def close(self):
-        self.save_values_to_file()
+        self.save_values_to_file(b_force=True)
         self.fe.close()
 
     def load_calibration_lookup(self):
@@ -261,9 +261,9 @@ Details: https://github.com/nanophysics/compact_2012/blob/master/doc_installatio
             def get_actual_DA_OUT_V():
                 if not obj_Dac.b_initialized:
                     # None: Labber just started.
-                    # We assume that we where on this volatge before.
+                    # We assume that we where on this voltage before.
                     obj_Dac.b_initialized = True
-                    obj_Dac.f_value_V = f_DA_OUT_desired_V
+                    obj_Dac.f_value_V = f_DA_OUT_desired_V/f_gain
 
                 return obj_Dac.f_value_V*f_gain
 
