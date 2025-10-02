@@ -11,6 +11,4 @@ pyvisa-py==0.5.2
 pyvisa-sim==0.5.1
 wheel
 
-# This is required by heater_termometrie_2021
-# TODO: Fix the compact code in this repo to be able to run against the newest mpfshell2.
-mpfshell2==100.9.17
+mpfshell2>=100.9.25

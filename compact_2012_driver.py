@@ -190,7 +190,7 @@ class Compact2012:
         self.shell = self.board.mpfshell
         self.fe = self.shell.MpFileExplorer
         # Download the source code
-        self.shell.sync_folder(DIRECTORY_OF_THIS_FILE / 'src_micropython', FILES_TO_SKIP=['config_identification.py'])
+        self.shell.sync_folder(DIRECTORY_OF_THIS_FILE / 'src_micropython', files_to_skip=['config_identification.py'])
         # Start the program
         self.fe.exec_('import micropython_logic')
         self.sync_status_get()
