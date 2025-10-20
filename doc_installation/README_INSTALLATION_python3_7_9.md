@@ -4,11 +4,12 @@
 
 Please note that this installation also installs the required python packages for the `pyboard` and `pyvisa`.
 
-| Python | Labber | Other Modules |  Project |
-| - | - | - | - |
-| 3.7 | yes | pyboard | [heater_thermometrie_2021](https://github.com/nanophysics/heater_thermometrie_2021/blob/main/doc_installation/README_INSTALLATION_python3_7_9.md) |
-| 3.7 | yes | pyboard | [compact_2012](https://github.com/nanophysics/compact_2012/blob/master/doc_installation/README_INSTALLATION_WITH_LABBER.md) |
-| 3.7 | yes | pyvisa | [labber_AMI430](https://github.com/nanophysics/labber_AMI430) |
+| Python | Other Modules |  Project |
+| - |  - | - |
+| 3.7 | mpfshell2 | [heater_thermometrie_2021](https://github.com/nanophysics/heater_thermometrie_2021/blob/main/doc_installation/README_INSTALLATION_python3_7_9.md) |
+| 3.7 | mpfshell2 | [compact_2012](https://github.com/nanophysics/compact_2012/blob/master/doc_installation/README_INSTALLATION_WITH_LABBER.md) |
+| 3.7 | mpfshell2 | [labber_ad_low_noise_float_2023](https://github.com/nanophysics/labber_ad_low_noise_float_2023) |
+| 3.7 | pyvisa | [labber_AMI430](https://github.com/nanophysics/labber_AMI430) |
 
 
 
